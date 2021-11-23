@@ -22,7 +22,7 @@ public class Game {
     private Player opponentPlayer;
     private Player human;
     private Player computer;
-    private int difficulty;
+    private int difficulty = 0;
 
     private Tile currentTile = null;
     private HashMap<Tile, Tile> candidates = null;
@@ -317,11 +317,63 @@ public class Game {
         }
     }
 
-    // public Temp calculateMoves(Temp temp) {
-    // int[] pos = temp.getMovingPiece().getPosition();
-    // Tile[][] tempGrid = temp.getTempGrid();
-    // Tile tempTile = tempGrid[pos[0]][pos[1]];
-    // HashMap<Tile, Tile> cands = calculateCandidates(tempGrid, tempTile);
+    public calculateTempsForEachCandidate(){
 
-    // }
+    }
+
+    // Recursive method that gets called when force == true
+    public Temp calculateMoves2(Temp temp) {
+        if (force) {
+            HashMap<Tile, Tile> cands = calculateCandidates(temp.getTempGrid(),
+                    temp.getPath().get(temp.getPath().size() - 1));
+            for (Tile t : cands.keySet()) {
+                temp.addPath(t);
+                int[] pos = t.getPosition();
+                temp.getTempGrid()[pos[0]][pos[1]].setOccupiedBy(temp.getMovingPiece());
+                temp.getTempGrid()[pos[0]][pos[1]].setIsOccupied(true);
+                ;
+            }
+            calculateMoves2(temp);
+        }
+    }
+
+    public Temp calculateMoves(Temp temp) {
+        int[] pos = temp.getMovingPiece().getPosition();
+        Piece p = temp.getMovingPiece();
+        Tile[][] tempGrid = temp.getTempGrid();
+        Tile tempTile = tempGrid[pos[0]][pos[1]];
+        HashMap<Tile, Tile> cands = calculateCandidates(tempGrid, tempTile);
+        ArrayList<Temp> temps = new ArrayList<>();
+
+        for (Tile cand : cands.keySet()) {
+
+            Tile[][] newTempGrid = tempGrid;
+            int[] newPos = cand.getPosition();
+            p.setPosition(newPos);
+            Tile movedTo = newTempGrid[newPos[0]][newPos[1]];
+            movedTo.setOccupiedBy(p);
+            movedTo.setIsOccupied(true);
+            ArrayList<Tile> path = new ArrayList<>();
+            path.add(movedTo);
+
+            Temp newTemp = new Temp(newTempGrid, p);
+            newTemp.addPath(newTempGrid[newPos[0]][newPos[1]]);
+
+            while (forced) {
+
+            }
+
+            if (cands.get(cand) != null) {
+                int[] takenPos = cands.get(cand).getPosition();
+                newTempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
+                newTempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
+                while (forced) {
+                    HashMap<Tile, Tile> cand2 = calculateCandidates(newTempGrid, movedTo);
+
+                }
+            }
+            temps.add(newTemp);
+        }
+
+    }
 }
