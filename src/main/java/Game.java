@@ -465,30 +465,34 @@ public class Game {
 
     // Recursive method that gets called when force == true
     public Temp calculateMoves2(Temp temp, ArrayList<Temp> temps) {
+        // Current tile where the moving piece is on is the last tile in the path
+        // arraylist.
+        Tile currentTile = temp.path.get(temp.path.size() - 1);
+        // Calculate candidate tiles for the current tile.
+        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, currentTile, temp.forced);
+        // If the candidates are not forced ones, halt by returning the parameter temp.
         if (temp.forced) {
+            temps.add(temp);
             return temp;
         }
-        Tile currentTile = temp.path.get(temp.path.size() - 1);
-        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, currentTile, temp.forced);
+        // If there's any forced candidates, for every candidate do
         for (Tile t : cands.keySet()) {
-
+            // Add the candidate to the path arraylist.
             temp.path.add(t);
             int[] pos = t.getPosition();
-            // Calling a grid like this works?
+            // Move the piece to the candidate tile
             temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
             temp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
             temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(temp.movingPiece);
             temp.tempGrid[pos[0]][pos[1]].setIsOccupied(true);
-            if (cands.get(t) == null) {
-                temp.forced = false;
-            } else {
-                int[] takenPos = cands.get(t).getPosition();
-                temp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
-                temp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
-                temp.path.add(t);
-                temps.add(temp);
-                Temp newTemp = calculateMoves2(temp, temps);
-            }
+
+            // Get the position of the tile that the candidate was jumped over to through.
+            int[] takenPos = cands.get(t).getPosition();
+            // Remove the piece on that tile
+            temp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
+            temp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
+            temps.add(temp);
+            Temp newTemp = calculateMoves2(temp, temps);
 
         }
         return null;

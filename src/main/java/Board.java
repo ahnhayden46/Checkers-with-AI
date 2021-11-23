@@ -124,37 +124,37 @@ public class Board extends JPanel {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
 
-                // if (board.getGame().getCurrentPlayer().getIsHuman()) {
-                // board.selectPiece(t, board);
-                // board.getGame().setCurrentPlayer(board.getGame().getHuman());
-                // }
-                board.selectAPiece(t, board);
-                board.repaint();
+                if (board.getGame().getCurrentPlayer().getIsHuman()) {
+                    board.selectPiece(t, board);
+                    board.selectAPiece(t, board);
+                    board.repaint();
 
-                if (board.game.getMoved()) {
-                    Player current = board.getGame().getCurrentPlayer();
-                    Player opponent = board.getGame().getOpponentPlayer();
+                    if (board.game.getMoved()) {
+                        Player current = board.getGame().getCurrentPlayer();
+                        Player opponent = board.getGame().getOpponentPlayer();
 
-                    if (board.game.getCaptured() && !board.game.getKingCaptured()) {
-                        HashMap<Tile, Tile> cands = board.getGame().calculateCandidates(board.getGrid(), t);
-                        if (board.game.getForced()) {
-                            board.game.setCurrentTile(t);
-                            board.game.setCandidates(cands);
-                            board.repaint();
-                        } else {
+                        if (board.game.getCaptured() && !board.game.getKingCaptured()) {
+                            HashMap<Tile, Tile> cands = board.getGame().calculateCandidates(board.getGrid(), t);
+                            if (board.game.getForced()) {
+                                board.game.setCurrentTile(t);
+                                board.game.setCandidates(cands);
+                                board.repaint();
+                            } else {
+                                board.getGame().setCurrentPlayer(opponent);
+                                board.getGame().setOpponentPlayer(current);
+                            }
+                        }
+
+                        else {
                             board.getGame().setCurrentPlayer(opponent);
                             board.getGame().setOpponentPlayer(current);
                         }
+                        board.game.setMoved(false);
+                        board.game.setKingCaptured(false);
+                        board.game.setCaptured(false);
                     }
-
-                    else {
-                        board.getGame().setCurrentPlayer(opponent);
-                        board.getGame().setOpponentPlayer(current);
-                    }
-                    board.game.setMoved(false);
-                    board.game.setKingCaptured(false);
-                    board.game.setCaptured(false);
                 }
+
             }
         });
     }
@@ -281,3 +281,8 @@ public class Board extends JPanel {
         });
     }
 }
+
+// i agree that u did quite a work for the last bit but before most of the time
+// u weren't rly there for the seminar meetings due to ur visa problem or
+// whatever that was,
+//
