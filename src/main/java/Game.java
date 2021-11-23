@@ -300,6 +300,152 @@ public class Game {
         return candidates;
     }
 
+    public HashMap<Tile, Tile> calculateCandidates(Tile[][] grid, Tile current, boolean forced) {
+
+        HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>();
+        HashMap<Tile, Tile> forcedCandidates = new HashMap<Tile, Tile>();
+
+        // Check if the given tile is occupied by any piece.
+        if (current.getIsOccupied() == true) {
+            int forward = 0;
+            // int backward = 0;
+            int[] position = current.getPosition();
+            // If it is occupied, check whether it is a human player's or a computer
+            // player's.
+            if (current.getOccupiedBy().getIsWhite()) {
+                // Set the right forward direction accordingly.
+                forward = -1;
+            } else {
+                forward = 1;
+            }
+
+            // ArrayList<int[][]> targetAndOppositePos = new ArrayList<>();
+            // // Nested int array consists of the {x, y} coordinates of the target tile and
+            // // one over it.
+            // int[][] pos1 = { { position[0] + forward, position[1] + 1 },
+            // { position[0] + (2 * forward), position[1] + 2 } };
+            // targetAndOppositePos.add(pos1);
+            // int[][] pos2 = { { position[0] + forward, position[1] - 1 },
+            // { position[0] + (2 * forward), position[1] - 2 } };
+            // targetAndOppositePos.add(pos2);
+
+            // // If the occupying piece is a king, calculate backward direction too.
+            // if (current.getOccupiedBy().getIsKing()) {
+            // if (current.getOccupiedBy().getIsWhite()) {
+            // backward = 1;
+            // } else {
+            // backward = -1;
+            // }
+            // int[][] pos3 = { { position[0] + backward, position[1] + 1 },
+            // { position[0] + (2 * backward), position[1] + 2 } };
+            // targetAndOppositePos.add(pos3);
+            // int[][] pos4 = { { position[0] + backward, position[1] - 1 },
+            // { position[0] + (2 * backward), position[1] - 2 } };
+            // targetAndOppositePos.add(pos4);
+            // }
+
+            // for (int[][] pos : targetAndOppositePos) {
+            // if(pos)
+            // if (t.getIsOccupied()) {
+            // if (this.isOccupiedByOpponent(current, t)) {
+
+            // }
+            // }
+            // }
+            // Append to the candidates array the forward diagonal tiles first.
+            // In case it is facing the end of the board, use try{}.
+            try {
+                Tile t = grid[position[0] + forward][position[1] + 1];
+                if (t.getIsOccupied() == true) {
+                    if (isOccupiedByOpponent(current, t)) {
+                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] + 1 };
+                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
+                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
+                            if (!oppositeTile.getIsOccupied()) {
+                                forcedCandidates.put(oppositeTile, t);
+                            }
+                        }
+                    }
+                } else {
+                    candidates.put(t, null);
+                }
+            } catch (Exception e) {
+            }
+            try {
+                Tile t = grid[position[0] + forward][position[1] - 1];
+                if (t.getIsOccupied() == true) {
+                    if (isOccupiedByOpponent(current, t)) {
+                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] - 1 };
+                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
+                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
+                            if (!oppositeTile.getIsOccupied()) {
+                                forcedCandidates.put(oppositeTile, t);
+                            }
+                        }
+                    }
+                } else {
+                    candidates.put(t, null);
+                }
+            } catch (Exception e) {
+            }
+
+            // If the piece is a king, calculate backward candidates too.
+            if (current.getOccupiedBy().getIsKing()) {
+                int backward;
+                if (current.getOccupiedBy().getIsWhite()) {
+                    // Set the right forward direction accordingly.
+                    backward = 1;
+                } else {
+                    backward = -1;
+                }
+
+                try {
+                    Tile t = grid[position[0] + backward][position[1] + 1];
+                    if (t.getIsOccupied() == true) {
+                        if (isOccupiedByOpponent(current, t)) {
+                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] + 1 };
+                            if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
+                                    && oppositePos[1] < 8) {
+                                Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
+                                if (!oppositeTile.getIsOccupied()) {
+                                    forcedCandidates.put(oppositeTile, t);
+                                }
+                            }
+                        }
+                    } else {
+                        candidates.put(t, null);
+                    }
+                } catch (Exception e) {
+                }
+                try {
+                    Tile t = grid[position[0] + backward][position[1] - 1];
+                    if (t.getIsOccupied() == true) {
+                        if (isOccupiedByOpponent(current, t)) {
+                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] - 1 };
+                            if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
+                                    && oppositePos[1] < 8) {
+                                Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
+                                if (!oppositeTile.getIsOccupied()) {
+                                    forcedCandidates.put(oppositeTile, t);
+                                }
+                            }
+                        }
+                    } else {
+                        candidates.put(t, null);
+                    }
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        if (!forcedCandidates.isEmpty()) {
+            forced = true;
+            return forcedCandidates;
+        }
+        forced = false;
+        return candidates;
+    }
+
     public int heuristic1() {
         return this.currentPlayer.getPieces().size() - this.opponentPlayer.getPieces().size();
     }
@@ -317,24 +463,35 @@ public class Game {
         }
     }
 
-    public calculateTempsForEachCandidate(){
-
-    }
-
     // Recursive method that gets called when force == true
-    public Temp calculateMoves2(Temp temp) {
-        if (force) {
-            HashMap<Tile, Tile> cands = calculateCandidates(temp.getTempGrid(),
-                    temp.getPath().get(temp.getPath().size() - 1));
-            for (Tile t : cands.keySet()) {
-                temp.addPath(t);
-                int[] pos = t.getPosition();
-                temp.getTempGrid()[pos[0]][pos[1]].setOccupiedBy(temp.getMovingPiece());
-                temp.getTempGrid()[pos[0]][pos[1]].setIsOccupied(true);
-                ;
-            }
-            calculateMoves2(temp);
+    public Temp calculateMoves2(Temp temp, ArrayList<Temp> temps) {
+        if (temp.forced) {
+            return temp;
         }
+        Tile currentTile = temp.path.get(temp.path.size() - 1);
+        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, currentTile, temp.forced);
+        for (Tile t : cands.keySet()) {
+
+            temp.path.add(t);
+            int[] pos = t.getPosition();
+            // Calling a grid like this works?
+            temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
+            temp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+            temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(temp.movingPiece);
+            temp.tempGrid[pos[0]][pos[1]].setIsOccupied(true);
+            if (cands.get(t) == null) {
+                temp.forced = false;
+            } else {
+                int[] takenPos = cands.get(t).getPosition();
+                temp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
+                temp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
+                temp.path.add(t);
+                temps.add(temp);
+                Temp newTemp = calculateMoves2(temp, temps);
+            }
+
+        }
+        return null;
     }
 
     public Temp calculateMoves(Temp temp) {
