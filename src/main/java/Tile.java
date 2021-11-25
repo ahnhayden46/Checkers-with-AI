@@ -28,6 +28,21 @@ public class Tile extends JPanel {
     private boolean isCurrent = false;
     private boolean isCandidate = false;
 
+    public Tile(Tile t) {
+        this.position = t.position;
+        this.isLight = t.isLight;
+        this.isOccupied = t.isOccupied;
+        if (t.occupiedBy != null) {
+            this.occupiedBy = new Piece(t.occupiedBy);
+        } else {
+            this.occupiedBy = null;
+        }
+        this.isEnd = t.isEnd;
+        this.tileSize = t.tileSize;
+        this.isCurrent = t.isCurrent;
+        this.isCandidate = t.isCandidate;
+    }
+
     public Tile(int[] position, double tileSize) {
         this.position = position;
         this.setIsLight();

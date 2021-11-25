@@ -125,13 +125,10 @@ public class Board extends JPanel {
             public void mouseClicked(MouseEvent e) {
 
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
-                    board.selectPiece(t, board);
                     board.selectAPiece(t, board);
                     board.repaint();
 
                     if (board.game.getMoved()) {
-                        Player current = board.getGame().getCurrentPlayer();
-                        Player opponent = board.getGame().getOpponentPlayer();
 
                         if (board.game.getCaptured() && !board.game.getKingCaptured()) {
                             HashMap<Tile, Tile> cands = board.getGame().calculateCandidates(board.getGrid(), t);
@@ -140,23 +137,55 @@ public class Board extends JPanel {
                                 board.game.setCandidates(cands);
                                 board.repaint();
                             } else {
-                                board.getGame().setCurrentPlayer(opponent);
-                                board.getGame().setOpponentPlayer(current);
+                                board.getGame().setCurrentPlayer(board.getGame().getComputer());
+                                board.getGame().setOpponentPlayer(board.getGame().getHuman());
                             }
                         }
 
                         else {
-                            board.getGame().setCurrentPlayer(opponent);
-                            board.getGame().setOpponentPlayer(current);
+                            board.getGame().setCurrentPlayer(board.getGame().getComputer());
+                            board.getGame().setOpponentPlayer(board.getGame().getHuman());
                         }
                         board.game.setMoved(false);
                         board.game.setKingCaptured(false);
                         board.game.setCaptured(false);
                     }
+                } else {
+                    computerTurn();
+                    board.repaint();
+                    board.getGame().setCurrentPlayer(board.getGame().getHuman());
+                    board.getGame().setOpponentPlayer(board.getGame().getComputer());
                 }
 
             }
         });
+    }
+
+    public void computerTurn() {
+        System.out.println(this.game.getHuman().getPieces().get(0).getPosition()[0]);
+        Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
+        temp = this.game.minimax(temp, 2, true, -10000, 10000);
+        System.out.println(this.grid[3][0].getIsOccupied());
+        int ID = temp.movingPiece.getID();
+        Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
+        int[] moveTo = temp.finalPostiion;
+        int[] moveFrom = movingPiece.getPosition();
+
+        movingPiece.setPosition(moveTo);
+        this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
+        this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
+        this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
+        this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+
+        if (!temp.takenPoses.isEmpty()) {
+            for (int[] pos : temp.takenPoses) {
+                int takenID = temp.tempGrid[pos[0]][pos[1]].getOccupiedBy().getID();
+                this.game.getHuman().removeAPiece(takenID);
+                this.grid[pos[0]][pos[1]].setOccupiedBy(null);
+                this.grid[pos[0]][pos[1]].setIsOccupied(false);
+            }
+        }
+        movingPiece.setIsKing(temp.movingPiece.getIsKing());
     }
 
     public void selectAPiece(Tile t, Board board) {
@@ -165,7 +194,7 @@ public class Board extends JPanel {
         // Check if there is a checker on the clicked tile.
         if (t.getIsOccupied() == true) {
             // Enable tiles on which only the pieces of the current player are put.
-            if (t.getOccupiedBy().getOwnedBy() == currentPlayer) {
+            if (t.getOccupiedBy().getIsWhite()) {
                 // Make sure the tile is not a candidate -> The click was not for selecting the
                 // destination of the piece but for choosing the piece to move.
                 if (t.getIsCandidate() == false) {

@@ -12,23 +12,20 @@ public class Piece {
     private int[] position;
     private boolean isWhite; // If true, it's a human player's piece.
     private boolean isKing;
-    private Player ownedBy;
     private int ID;
 
     public Piece(int[] position, boolean isWhite, boolean isKing, Player ownedBy, int ID) {
         this.position = position;
         this.isWhite = isWhite;
         this.isKing = isKing;
-        this.ownedBy = ownedBy;
         this.ID = ID;
     }
 
-    public Player getOwnedBy() {
-        return ownedBy;
-    }
-
-    public void setOwnedBy(Player ownedBy) {
-        this.ownedBy = ownedBy;
+    public Piece(Piece p) {
+        this.position = p.position;
+        this.isWhite = p.isWhite; // If true, it's a human player's piece.
+        this.isKing = p.isKing;
+        this.ID = p.ID;
     }
 
     public int getID() {

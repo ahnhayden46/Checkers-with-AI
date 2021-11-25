@@ -18,6 +18,18 @@ public class Player {
     public Player() {
     }
 
+    public Player(Player p) {
+        this.isHuman = p.isHuman;// 1 if white, -1 if black
+        this.pieces = new ArrayList<>();
+        if (!p.pieces.isEmpty()) {
+            for (Piece piece : p.pieces) {
+                Piece newPiece = new Piece(piece);
+                pieces.add(newPiece);
+            }
+        }
+
+    }
+
     public Player(boolean isHuman, ArrayList<Piece> pieces) {
         this.isHuman = isHuman;
         this.pieces = pieces;

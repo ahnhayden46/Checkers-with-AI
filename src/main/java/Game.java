@@ -446,95 +446,243 @@ public class Game {
         return candidates;
     }
 
-    public int heuristic1() {
-        return this.currentPlayer.getPieces().size() - this.opponentPlayer.getPieces().size();
+    // Count how many pieces do the player have more than the opponent (Could be
+    // minus)
+    public int heuristic1(Temp temp) {
+        return temp.computerPieces.size() - temp.humanPieces.size();
     }
 
-    public void minimax(Temp temp, int depth, boolean max_player, int alpha, int beta) {
+    public Temp minimax(Temp temp, int depth, boolean max_player, int alpha, int beta) {
         if (depth == 0) {
-            int score = heuristic1();
-
-        }
-
-        if (max_player) {
-            int max_eval = -10000;
-            for (Piece p : this.currentPlayer.getPieces()) {
-            }
-        }
-    }
-
-    // Recursive method that gets called when force == true
-    public Temp calculateMoves2(Temp temp, ArrayList<Temp> temps) {
-        // Current tile where the moving piece is on is the last tile in the path
-        // arraylist.
-        Tile currentTile = temp.path.get(temp.path.size() - 1);
-        // Calculate candidate tiles for the current tile.
-        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, currentTile, temp.forced);
-        // If the candidates are not forced ones, halt by returning the parameter temp.
-        if (temp.forced) {
-            temps.add(temp);
+            temp.heuristicScore = heuristic1(temp);
             return temp;
         }
-        // If there's any forced candidates, for every candidate do
-        for (Tile t : cands.keySet()) {
-            // Add the candidate to the path arraylist.
-            temp.path.add(t);
-            int[] pos = t.getPosition();
-            // Move the piece to the candidate tile
-            temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
-            temp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
-            temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(temp.movingPiece);
-            temp.tempGrid[pos[0]][pos[1]].setIsOccupied(true);
 
-            // Get the position of the tile that the candidate was jumped over to through.
-            int[] takenPos = cands.get(t).getPosition();
-            // Remove the piece on that tile
-            temp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
-            temp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
-            temps.add(temp);
-            Temp newTemp = calculateMoves2(temp, temps);
-
-        }
-        return null;
-    }
-
-    public Temp calculateMoves(Temp temp) {
-        int[] pos = temp.getMovingPiece().getPosition();
-        Piece p = temp.getMovingPiece();
-        Tile[][] tempGrid = temp.getTempGrid();
-        Tile tempTile = tempGrid[pos[0]][pos[1]];
-        HashMap<Tile, Tile> cands = calculateCandidates(tempGrid, tempTile);
+        Temp result = new Temp();
         ArrayList<Temp> temps = new ArrayList<>();
-
-        for (Tile cand : cands.keySet()) {
-
-            Tile[][] newTempGrid = tempGrid;
-            int[] newPos = cand.getPosition();
-            p.setPosition(newPos);
-            Tile movedTo = newTempGrid[newPos[0]][newPos[1]];
-            movedTo.setOccupiedBy(p);
-            movedTo.setIsOccupied(true);
-            ArrayList<Tile> path = new ArrayList<>();
-            path.add(movedTo);
-
-            Temp newTemp = new Temp(newTempGrid, p);
-            newTemp.addPath(newTempGrid[newPos[0]][newPos[1]]);
-
-            while (forced) {
-
-            }
-
-            if (cands.get(cand) != null) {
-                int[] takenPos = cands.get(cand).getPosition();
-                newTempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
-                newTempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
-                while (forced) {
-                    HashMap<Tile, Tile> cand2 = calculateCandidates(newTempGrid, movedTo);
-
+        if (max_player) {
+            for (Temp temp2 : getAllMoves(temp, false, temps)) {
+                temp2 = minimax(temp2, depth - 1, false, alpha, beta);
+                if (alpha <= temp2.heuristicScore) {
+                    alpha = temp2.heuristicScore;
+                    result = new Temp(temp2);
+                    if (beta <= alpha) {
+                        break;
+                    }
                 }
             }
-            temps.add(newTemp);
+            return result;
+        } else {
+            for (Temp temp2 : getAllMoves(temp, true, temps)) {
+                temp2 = minimax(temp2, depth - 1, true, alpha, beta);
+                if (beta >= temp2.heuristicScore) {
+                    beta = temp2.heuristicScore;
+                    result = new Temp(temp2);
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+    }
+
+    public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps) {
+        if (!temp.forced) {
+            temp.heuristicScore = heuristic1(temp);
+            temps.add(temp);
+            return temps;
         }
 
+        for (Tile t : cands.keySet()) {
+            Temp newTemp = new Temp(temp);
+            int[] pos = temp.movingPiece.getPosition();
+            int[] candPos = t.getPosition();
+            int[] takenPos = cands.get(t).getPosition();
+            newTemp.movingPiece.setPosition(candPos);
+            newTemp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
+            newTemp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+            newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
+            newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
+
+            if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsKing()) {
+                newTemp.forced = false;
+                newTemp.movingPiece.setIsKing(true);
+            } else if (takenPos[0] == 0 || takenPos[0] == 7) {
+                newTemp.movingPiece.setIsKing(true);
+            }
+
+            int takenID = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getID();
+
+            if (newTemp.movingPiece.getIsWhite()) {
+                newTemp.computerPieces.remove(takenID);
+            }
+            newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
+            newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
+            newTemp.takenPoses.add(takenPos);
+            newTemp.finalPostiion = candPos;
+
+            HashMap<Tile, Tile> newCands = calculateCandidates(newTemp.tempGrid,
+                    newTemp.tempGrid[candPos[0]][candPos[1]], newTemp.forced);
+
+            temps = getPieceForcedMove(newTemp, newCands, temps);
+        }
+        return temps;
     }
+
+    public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece movingPiece, ArrayList<Temp> temps) {
+
+        temp.movingPiece = movingPiece;
+        int[] pos = movingPiece.getPosition();
+        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, temp.tempGrid[pos[0]][pos[1]], temp.forced);
+
+        if (!cands.isEmpty()) {
+            if (!temp.forced) {
+                for (Tile t : cands.keySet()) {
+                    int[] candPos = t.getPosition();
+                    Temp newTemp = new Temp(temp);
+                    newTemp.movingPiece.setPosition(candPos);
+                    newTemp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
+                    newTemp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+                    newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
+                    newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
+                    newTemp.finalPostiion = candPos;
+
+                    if (candPos[0] == 0 || candPos[0] == 7) {
+                        newTemp.movingPiece.setIsKing(true);
+                    }
+                    newTemp.heuristicScore = heuristic1(newTemp);
+                    temps.add(newTemp);
+                }
+                return temps;
+
+            } else {
+                temps = getPieceForcedMove(temp, cands, temps);
+            }
+        }
+        return temps;
+    }
+
+    public ArrayList<Temp> getAllMoves(Temp temp, boolean isHuman, ArrayList<Temp> temps) {
+        ArrayList<Piece> pieces = new ArrayList<>();
+        if (isHuman) {
+            pieces = temp.humanPieces;
+        } else {
+            pieces = temp.computerPieces;
+        }
+        if (!pieces.isEmpty()) {
+            for (Piece p : pieces) {
+                temp.movingPiece = p;
+                temps.addAll(getPieceAllMoves(temp, p, temps));
+            }
+        } else {
+            System.out.println("Pieces are empty.");
+        }
+
+        return temps;
+    }
+
+    // public Temp minimax2(Temp temp, int depth, boolean max_player, int alpha, int
+    // beta) {
+    // // If search is done with set depth, return the heuristic score with the
+    // other
+    // // info.
+    // if (depth == 0) {
+    // return temp;
+    // }
+
+    // // If max_player is true (when calculating computer player's move)
+    // if (max_player) {
+    // // For every piece the computer has
+    // for (Piece p : temp.computerPieces) {
+    // int[] pos = p.getPosition();
+    // HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid,
+    // temp.tempGrid[pos[0]][pos[1]],
+    // temp.forced);
+    // if (!temp.forced) {
+    // for (Tile t : cands.keySet()) {
+    // Temp newTemp = new Temp(temp);
+    // int[] tilePos = t.getPosition();
+    // // Move the piece to the candidate tile
+    // newTemp.tempGrid[tilePos[0]][tilePos[1]].setOccupiedBy(null);
+    // newTemp.tempGrid[tilePos[0]][tilePos[1]].setIsOccupied(false);
+    // newTemp.tempGrid[tilePos[0]][tilePos[1]].setOccupiedBy(newTemp.movingPiece);
+    // newTemp.tempGrid[tilePos[0]][tilePos[1]].setIsOccupied(true);
+
+    // if (tilePos[0] == 0 || tilePos[0] == 7) {
+    // newTemp.movingPiece.setIsKing(true);
+    // }
+
+    // newTemp.heuristicScore = heuristic1(newTemp);
+    // if(alpha <= newTemp.heuristicScore){
+    // alpha = newTemp.heuristicScore;
+    // }
+
+    // if(beta <= alpha){
+    // break;
+    // }
+    // }
+    // }
+    // else{
+    // Temp newTemp = calculateMoves(temp, max_player, alpha, beta);
+    // }
+    // }
+    // }
+
+    // else{
+    // for (Piece p : temp.)
+    // }
+    // }
+
+    // public Temp calculateMoves2(Temp temp, boolean max_player, int alpha, int
+    // beta) {
+    // // Current tile where the moving piece is on is the last tile in the path
+    // // arraylist.
+    // Tile currentTile = temp.path.get(temp.path.size() - 1);
+    // // Calculate candidate tiles for the current tile.
+    // HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, currentTile,
+    // temp.forced);
+    // // If the candidates are not forced ones, halt by returning the parameter
+    // temp.
+    // if (!temp.forced) {
+    // temp.heuristicScore = heuristic1(temp);
+    // return temp;
+    // }
+    // Temp newTemp = new Temp();
+    // // If there's any forced candidates, for every candidate do
+    // for (Tile t : cands.keySet()) {
+    // // Add the candidate to the path arraylist.
+    // temp.path.add(t);
+    // int[] pos = t.getPosition();
+    // // Move the piece to the candidate tile
+    // temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
+    // temp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+    // temp.tempGrid[pos[0]][pos[1]].setOccupiedBy(temp.movingPiece);
+    // temp.tempGrid[pos[0]][pos[1]].setIsOccupied(true);
+
+    // if (pos[0] == 0 || pos[0] == 7) {
+    // temp.movingPiece.setIsKing(true);
+    // }
+
+    // // Get the position of the tile that the candidate was jumped over to
+    // through.
+    // int[] takenPos = cands.get(t).getPosition();
+    // // Remove the piece on that tile
+    // temp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
+    // temp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
+    // newTemp = calculateMoves(temp, max_player, alpha, beta);
+    // if (max_player) {
+    // if (alpha <= newTemp.heuristicScore) {
+    // alpha = newTemp.heuristicScore;
+    // return newTemp;
+    // }
+    // if (beta <= alpha) {
+    // break;
+    // }
+    // }
+
+    // }
+    // return newTemp;
+    // }
+
 }
