@@ -150,7 +150,7 @@ public class Game {
         this.opponentPlayer = current;
     }
 
-    public boolean isOccupiedByOpponent(Tile currentTile, Tile targetTile) {
+    public static boolean isOccupiedByOpponent(Tile currentTile, Tile targetTile) {
         return (currentTile.getOccupiedBy().getIsWhite() != targetTile.getOccupiedBy().getIsWhite());
     }
 
@@ -300,152 +300,6 @@ public class Game {
         return candidates;
     }
 
-    public HashMap<Tile, Tile> calculateCandidates(Tile[][] grid, Tile current, boolean forced) {
-
-        HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>();
-        HashMap<Tile, Tile> forcedCandidates = new HashMap<Tile, Tile>();
-
-        // Check if the given tile is occupied by any piece.
-        if (current.getIsOccupied() == true) {
-            int forward = 0;
-            // int backward = 0;
-            int[] position = current.getPosition();
-            // If it is occupied, check whether it is a human player's or a computer
-            // player's.
-            if (current.getOccupiedBy().getIsWhite()) {
-                // Set the right forward direction accordingly.
-                forward = -1;
-            } else {
-                forward = 1;
-            }
-
-            // ArrayList<int[][]> targetAndOppositePos = new ArrayList<>();
-            // // Nested int array consists of the {x, y} coordinates of the target tile and
-            // // one over it.
-            // int[][] pos1 = { { position[0] + forward, position[1] + 1 },
-            // { position[0] + (2 * forward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos1);
-            // int[][] pos2 = { { position[0] + forward, position[1] - 1 },
-            // { position[0] + (2 * forward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos2);
-
-            // // If the occupying piece is a king, calculate backward direction too.
-            // if (current.getOccupiedBy().getIsKing()) {
-            // if (current.getOccupiedBy().getIsWhite()) {
-            // backward = 1;
-            // } else {
-            // backward = -1;
-            // }
-            // int[][] pos3 = { { position[0] + backward, position[1] + 1 },
-            // { position[0] + (2 * backward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos3);
-            // int[][] pos4 = { { position[0] + backward, position[1] - 1 },
-            // { position[0] + (2 * backward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos4);
-            // }
-
-            // for (int[][] pos : targetAndOppositePos) {
-            // if(pos)
-            // if (t.getIsOccupied()) {
-            // if (this.isOccupiedByOpponent(current, t)) {
-
-            // }
-            // }
-            // }
-            // Append to the candidates array the forward diagonal tiles first.
-            // In case it is facing the end of the board, use try{}.
-            try {
-                Tile t = grid[position[0] + forward][position[1] + 1];
-                if (t.getIsOccupied() == true) {
-                    if (isOccupiedByOpponent(current, t)) {
-                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] + 1 };
-                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
-                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                            if (!oppositeTile.getIsOccupied()) {
-                                forcedCandidates.put(oppositeTile, t);
-                            }
-                        }
-                    }
-                } else {
-                    candidates.put(t, null);
-                }
-            } catch (Exception e) {
-            }
-            try {
-                Tile t = grid[position[0] + forward][position[1] - 1];
-                if (t.getIsOccupied() == true) {
-                    if (isOccupiedByOpponent(current, t)) {
-                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] - 1 };
-                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
-                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                            if (!oppositeTile.getIsOccupied()) {
-                                forcedCandidates.put(oppositeTile, t);
-                            }
-                        }
-                    }
-                } else {
-                    candidates.put(t, null);
-                }
-            } catch (Exception e) {
-            }
-
-            // If the piece is a king, calculate backward candidates too.
-            if (current.getOccupiedBy().getIsKing()) {
-                int backward;
-                if (current.getOccupiedBy().getIsWhite()) {
-                    // Set the right forward direction accordingly.
-                    backward = 1;
-                } else {
-                    backward = -1;
-                }
-
-                try {
-                    Tile t = grid[position[0] + backward][position[1] + 1];
-                    if (t.getIsOccupied() == true) {
-                        if (isOccupiedByOpponent(current, t)) {
-                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] + 1 };
-                            if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
-                                    && oppositePos[1] < 8) {
-                                Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                                if (!oppositeTile.getIsOccupied()) {
-                                    forcedCandidates.put(oppositeTile, t);
-                                }
-                            }
-                        }
-                    } else {
-                        candidates.put(t, null);
-                    }
-                } catch (Exception e) {
-                }
-                try {
-                    Tile t = grid[position[0] + backward][position[1] - 1];
-                    if (t.getIsOccupied() == true) {
-                        if (isOccupiedByOpponent(current, t)) {
-                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] - 1 };
-                            if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
-                                    && oppositePos[1] < 8) {
-                                Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                                if (!oppositeTile.getIsOccupied()) {
-                                    forcedCandidates.put(oppositeTile, t);
-                                }
-                            }
-                        }
-                    } else {
-                        candidates.put(t, null);
-                    }
-                } catch (Exception e) {
-                }
-            }
-        }
-
-        if (!forcedCandidates.isEmpty()) {
-            forced = true;
-            return forcedCandidates;
-        }
-        forced = false;
-        return candidates;
-    }
-
     // Count how many pieces do the player have more than the opponent (Could be
     // minus)
     public int heuristic1(Temp temp) {
@@ -461,80 +315,106 @@ public class Game {
         Temp result = new Temp();
         ArrayList<Temp> temps = new ArrayList<>();
         if (max_player) {
-            for (Temp temp2 : getAllMoves(temp, false, temps)) {
-                temp2 = minimax(temp2, depth - 1, false, alpha, beta);
-                if (alpha <= temp2.heuristicScore) {
-                    alpha = temp2.heuristicScore;
-                    result = new Temp(temp2);
-                    if (beta <= alpha) {
-                        break;
+            for (Piece p : temp.computerPieces) {
+                temps = getPieceAllMoves(temp, p, temps, depth);
+                for (Temp temp2 : temps) {
+                    temp2 = minimax(temp2, depth - 1, false, alpha, beta);
+                    if (alpha <= temp2.heuristicScore) {
+                        alpha = temp2.heuristicScore;
+                        result = temp2;
+                        if (beta <= alpha) {
+                            break;
+                        }
                     }
+                }
+                if (beta <= alpha) {
+                    break;
                 }
             }
             return result;
         } else {
-            for (Temp temp2 : getAllMoves(temp, true, temps)) {
-                temp2 = minimax(temp2, depth - 1, true, alpha, beta);
-                if (beta >= temp2.heuristicScore) {
-                    beta = temp2.heuristicScore;
-                    result = new Temp(temp2);
-                    if (beta <= alpha) {
-                        break;
+            for (Piece p : temp.humanPieces) {
+                temps = getPieceAllMoves(temp, p, temps, depth);
+                for (Temp temp2 : temps) {
+                    temp2 = minimax(temp2, depth - 1, true, alpha, beta);
+                    if (alpha <= temp2.heuristicScore) {
+                        alpha = temp2.heuristicScore;
+                        result = temp2;
+                        if (beta <= alpha) {
+                            break;
+                        }
                     }
+                }
+                if (beta <= alpha) {
+                    break;
                 }
             }
             return result;
         }
     }
 
-    public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps) {
+    public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps, int depth) {
         if (!temp.forced) {
             temp.heuristicScore = heuristic1(temp);
+            if (depth == 1) {
+                temp.firstPieceLastPos = temp.movingPiecePos;
+            }
             temps.add(temp);
             return temps;
         }
 
         for (Tile t : cands.keySet()) {
             Temp newTemp = new Temp(temp);
-            int[] pos = temp.movingPiece.getPosition();
+            int[] movingPiecePos = temp.movingPiecePos;
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
-            newTemp.movingPiece.setPosition(candPos);
-            newTemp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
-            newTemp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+            temp.movingPiece.setPosition(candPos);
+            newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
+            newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
             newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
             newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
 
             if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsKing()) {
                 newTemp.forced = false;
-                newTemp.movingPiece.setIsKing(true);
-            } else if (takenPos[0] == 0 || takenPos[0] == 7) {
-                newTemp.movingPiece.setIsKing(true);
+                temp.movingPiece.setIsKing(true);
+            } else if (candPos[0] == 0 || candPos[0] == 7) {
+                temp.movingPiece.setIsKing(true);
             }
 
             int takenID = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getID();
 
-            if (newTemp.movingPiece.getIsWhite()) {
+            if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsWhite()) {
+                newTemp.humanPieces.remove(takenID);
+            } else {
                 newTemp.computerPieces.remove(takenID);
             }
+
+            if (newTemp.firstMovingPiece.equals(newTemp.movingPiece)) {
+                newTemp.firstTakenPieces.add(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy());
+            }
+
+            newTemp.takenPieces.add(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy());
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
-            newTemp.takenPoses.add(takenPos);
-            newTemp.finalPostiion = candPos;
+            newTemp.movingPiecePos = candPos;
 
-            HashMap<Tile, Tile> newCands = calculateCandidates(newTemp.tempGrid,
-                    newTemp.tempGrid[candPos[0]][candPos[1]], newTemp.forced);
+            HashMap<Tile, Tile> newCands = temp
+                    .calculateCandidates(newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
 
-            temps = getPieceForcedMove(newTemp, newCands, temps);
+            temps = getPieceForcedMove(newTemp, newCands, temps, depth);
         }
         return temps;
     }
 
-    public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece movingPiece, ArrayList<Temp> temps) {
+    public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
 
-        temp.movingPiece = movingPiece;
-        int[] pos = movingPiece.getPosition();
-        HashMap<Tile, Tile> cands = calculateCandidates(temp.tempGrid, temp.tempGrid[pos[0]][pos[1]], temp.forced);
+        if (depth == 1) {
+            temp.firstMovingPiece = p;
+        }
+        temp.movingPiece = p;
+        temp.movingPiecePos = temp.movingPiece.getPosition();
+        HashMap<Tile, Tile> cands = temp
+                .calculateCandidates(temp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]]);
 
         if (!cands.isEmpty()) {
             if (!temp.forced) {
@@ -542,45 +422,54 @@ public class Game {
                     int[] candPos = t.getPosition();
                     Temp newTemp = new Temp(temp);
                     newTemp.movingPiece.setPosition(candPos);
-                    newTemp.tempGrid[pos[0]][pos[1]].setOccupiedBy(null);
-                    newTemp.tempGrid[pos[0]][pos[1]].setIsOccupied(false);
+                    newTemp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]].setOccupiedBy(null);
+                    newTemp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]].setIsOccupied(false);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
-                    newTemp.finalPostiion = candPos;
+                    if (depth == 1) {
+                        newTemp.firstPieceLastPos = candPos;
+                    }
 
                     if (candPos[0] == 0 || candPos[0] == 7) {
-                        newTemp.movingPiece.setIsKing(true);
+                        newTemp.tempGrid[candPos[0]][candPos[1]].getOccupiedBy().setIsKing(true);
                     }
                     newTemp.heuristicScore = heuristic1(newTemp);
+                    newTemp.movingPiecePos = candPos;
                     temps.add(newTemp);
                 }
                 return temps;
 
             } else {
-                temps = getPieceForcedMove(temp, cands, temps);
+                Temp newTemp = new Temp(temp);
+                newTemp.forced = true;
+                temps = getPieceForcedMove(newTemp, cands, temps, depth);
             }
         }
         return temps;
     }
 
-    public ArrayList<Temp> getAllMoves(Temp temp, boolean isHuman, ArrayList<Temp> temps) {
-        ArrayList<Piece> pieces = new ArrayList<>();
-        if (isHuman) {
-            pieces = temp.humanPieces;
-        } else {
-            pieces = temp.computerPieces;
-        }
-        if (!pieces.isEmpty()) {
-            for (Piece p : pieces) {
-                temp.movingPiece = p;
-                temps.addAll(getPieceAllMoves(temp, p, temps));
-            }
-        } else {
-            System.out.println("Pieces are empty.");
-        }
+    // public ArrayList<Temp> getAllMoves(Temp temp, boolean isHuman,
+    // ArrayList<Temp> temps, int depth) {
+    // ArrayList<Piece> pieces = new ArrayList<>();
+    // if (isHuman) {
+    // pieces = temp.humanPieces;
+    // } else {
+    // pieces = temp.computerPieces;
+    // }
+    // if (!pieces.isEmpty()) {
+    // for (Piece p : pieces) {
+    // temp.movingPiece = p;
+    // if (depth == 3) {
+    // temp.firstMovingPiece = p;
+    // }
+    // temps.addAll(getPieceAllMoves(temp, temps, depth));
+    // }
+    // } else {
+    // System.out.println("Pieces are empty.");
+    // }
 
-        return temps;
-    }
+    // return temps;
+    // }
 
     // public Temp minimax2(Temp temp, int depth, boolean max_player, int alpha, int
     // beta) {

@@ -162,13 +162,11 @@ public class Board extends JPanel {
     }
 
     public void computerTurn() {
-        System.out.println(this.game.getHuman().getPieces().get(0).getPosition()[0]);
         Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
-        temp = this.game.minimax(temp, 2, true, -10000, 10000);
-        System.out.println(this.grid[3][0].getIsOccupied());
-        int ID = temp.movingPiece.getID();
+        temp = this.game.minimax(temp, 1, true, -10000, 10000);
+        int ID = temp.firstMovingPiece.getID();
         Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
-        int[] moveTo = temp.finalPostiion;
+        int[] moveTo = temp.firstPieceLastPos;
         int[] moveFrom = movingPiece.getPosition();
 
         movingPiece.setPosition(moveTo);
@@ -177,15 +175,27 @@ public class Board extends JPanel {
         this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
         this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
 
-        if (!temp.takenPoses.isEmpty()) {
-            for (int[] pos : temp.takenPoses) {
-                int takenID = temp.tempGrid[pos[0]][pos[1]].getOccupiedBy().getID();
-                this.game.getHuman().removeAPiece(takenID);
+        if (!temp.firstTakenPieces.isEmpty()) {
+            for (Piece p : temp.firstTakenPieces) {
+                System.out.println(temp.tempGrid[4][5].getIsOccupied());
+                int takenID = p.getID();
+                try {
+                    this.game.getHuman().removeAPiece(takenID);
+                } catch (Exception e) {
+
+                }
+                try {
+                    this.game.getComputer().removeAPiece(takenID);
+                } catch (Exception e) {
+
+                }
+                int[] pos = p.getPosition();
                 this.grid[pos[0]][pos[1]].setOccupiedBy(null);
                 this.grid[pos[0]][pos[1]].setIsOccupied(false);
+                this.repaint();
             }
         }
-        movingPiece.setIsKing(temp.movingPiece.getIsKing());
+        movingPiece.setIsKing(temp.firstMovingPiece.getIsKing());
     }
 
     public void selectAPiece(Tile t, Board board) {
