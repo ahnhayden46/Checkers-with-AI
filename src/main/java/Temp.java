@@ -4,13 +4,12 @@ import java.util.HashMap;
 public class Temp {
 
     public Tile[][] tempGrid = new Tile[8][8];
-    public Piece firstMovingPiece;
     public int[] firstPieceLastPos;
     public Piece movingPiece;
-    public int[] movingPiecePos;
+    public Piece firstPiece;
     public ArrayList<Piece> firstTakenPieces = new ArrayList<>();
     public ArrayList<Piece> takenPieces = new ArrayList<>();
-    public int heuristicScore = -10000;
+    public int heuristicScore = 0;
     public boolean forced;
     public ArrayList<Piece> humanPieces = new ArrayList<>();
     public ArrayList<Piece> computerPieces = new ArrayList<>();
@@ -26,7 +25,9 @@ public class Temp {
                 this.tempGrid[i][j] = tile;
             }
         }
-        this.firstMovingPiece = temp.firstMovingPiece;
+        if (temp.firstPiece != null) {
+            this.firstPiece = new Piece(temp.firstPiece);
+        }
         this.firstTakenPieces = temp.firstTakenPieces;
         this.firstPieceLastPos = temp.firstPieceLastPos;
         for (Piece p : temp.humanPieces) {
@@ -36,15 +37,13 @@ public class Temp {
             this.computerPieces.add(p);
         }
         this.movingPiece = temp.movingPiece;
-        this.movingPiecePos = temp.movingPiecePos;
         this.takenPieces = temp.takenPieces;
         this.heuristicScore = temp.heuristicScore;
         this.forced = temp.forced;
     }
 
-    public Temp(Tile[][] tempGrid, int[] movingPiecePos) {
+    public Temp(Tile[][] tempGrid) {
         this.tempGrid = tempGrid;
-        this.movingPiecePos = movingPiecePos;
     }
 
     public Temp(Tile[][] tempGrid, ArrayList<Piece> humanPieces, ArrayList<Piece> computerPieces) {
@@ -66,6 +65,19 @@ public class Temp {
                 this.computerPieces.add(newPiece);
             }
         }
+    }
+
+    public int findPieceIndexByID(int ID, ArrayList<Piece> pieces) {
+        boolean found = false;
+        int i = 0;
+        while (!found) {
+            if (pieces.get(i).getID() == ID) {
+                found = true;
+            } else {
+                i++;
+            }
+        }
+        return i;
     }
 
     public HashMap<Tile, Tile> calculateCandidates(Tile current) {

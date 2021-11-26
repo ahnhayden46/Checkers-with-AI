@@ -337,8 +337,8 @@ public class Game {
                 temps = getPieceAllMoves(temp, p, temps, depth);
                 for (Temp temp2 : temps) {
                     temp2 = minimax(temp2, depth - 1, true, alpha, beta);
-                    if (alpha <= temp2.heuristicScore) {
-                        alpha = temp2.heuristicScore;
+                    if (beta >= temp2.heuristicScore) {
+                        beta = temp2.heuristicScore;
                         result = temp2;
                         if (beta <= alpha) {
                             break;
@@ -356,8 +356,9 @@ public class Game {
     public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps, int depth) {
         if (!temp.forced) {
             temp.heuristicScore = heuristic1(temp);
-            if (depth == 1) {
-                temp.firstPieceLastPos = temp.movingPiecePos;
+            if (depth == 2 && temp.firstPiece.getID() == temp.movingPiece.getID()) {
+                temp.firstPieceLastPos = temp.movingPiece.getPosition();
+                temp.firstPiece.setIsKing(temp.movingPiece.getIsKing());
             }
             temps.add(temp);
             return temps;
@@ -365,9 +366,10 @@ public class Game {
 
         for (Tile t : cands.keySet()) {
             Temp newTemp = new Temp(temp);
-            int[] movingPiecePos = temp.movingPiecePos;
+            int[] movingPiecePos = temp.movingPiece.getPosition();
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
+            System.out.println(candPos[0] + " " + candPos[1] + "    " + takenPos[0] + " " + takenPos[1]);
             temp.movingPiece.setPosition(candPos);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
@@ -384,21 +386,20 @@ public class Game {
             int takenID = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getID();
 
             if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsWhite()) {
-                newTemp.humanPieces.remove(takenID);
+                newTemp.humanPieces.remove(newTemp.findPieceIndexByID(takenID, newTemp.humanPieces));
             } else {
-                newTemp.computerPieces.remove(takenID);
+                newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenID, newTemp.computerPieces));
             }
 
-            if (newTemp.firstMovingPiece.equals(newTemp.movingPiece)) {
-                newTemp.firstTakenPieces.add(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy());
+            if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+                newTemp.firstTakenPieces.add(new Piece(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy()));
             }
 
             newTemp.takenPieces.add(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy());
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
-            newTemp.movingPiecePos = candPos;
 
-            HashMap<Tile, Tile> newCands = temp
+            HashMap<Tile, Tile> newCands = newTemp
                     .calculateCandidates(newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
 
             temps = getPieceForcedMove(newTemp, newCands, temps, depth);
@@ -408,40 +409,37 @@ public class Game {
 
     public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
 
-        if (depth == 1) {
-            temp.firstMovingPiece = p;
-        }
         temp.movingPiece = p;
-        temp.movingPiecePos = temp.movingPiece.getPosition();
-        HashMap<Tile, Tile> cands = temp
-                .calculateCandidates(temp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]]);
+        int[] movingPiecePos = temp.movingPiece.getPosition();
+        System.out.println(movingPiecePos[0]);
+        HashMap<Tile, Tile> cands = temp.calculateCandidates(temp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
 
         if (!cands.isEmpty()) {
+            Temp newTemp = new Temp(temp);
+            if (depth == 2) {
+                newTemp.firstPiece = new Piece(p);
+            }
             if (!temp.forced) {
                 for (Tile t : cands.keySet()) {
                     int[] candPos = t.getPosition();
-                    Temp newTemp = new Temp(temp);
                     newTemp.movingPiece.setPosition(candPos);
-                    newTemp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]].setOccupiedBy(null);
-                    newTemp.tempGrid[temp.movingPiecePos[0]][temp.movingPiecePos[1]].setIsOccupied(false);
+                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
+                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
-                    if (depth == 1) {
-                        newTemp.firstPieceLastPos = candPos;
-                    }
-
                     if (candPos[0] == 0 || candPos[0] == 7) {
                         newTemp.tempGrid[candPos[0]][candPos[1]].getOccupiedBy().setIsKing(true);
                     }
                     newTemp.heuristicScore = heuristic1(newTemp);
-                    newTemp.movingPiecePos = candPos;
+                    if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+                        newTemp.firstPieceLastPos = candPos;
+                        newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
+                    }
                     temps.add(newTemp);
                 }
                 return temps;
 
             } else {
-                Temp newTemp = new Temp(temp);
-                newTemp.forced = true;
                 temps = getPieceForcedMove(newTemp, cands, temps, depth);
             }
         }

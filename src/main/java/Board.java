@@ -155,6 +155,8 @@ public class Board extends JPanel {
                     board.repaint();
                     board.getGame().setCurrentPlayer(board.getGame().getHuman());
                     board.getGame().setOpponentPlayer(board.getGame().getComputer());
+                    System.out.println(board.getGame().getHuman().getPieces().size() + " "
+                            + board.getGame().getComputer().getPieces().size());
                 }
 
             }
@@ -163,8 +165,8 @@ public class Board extends JPanel {
 
     public void computerTurn() {
         Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
-        temp = this.game.minimax(temp, 1, true, -10000, 10000);
-        int ID = temp.firstMovingPiece.getID();
+        temp = this.game.minimax(temp, 2, true, -10000, 10000);
+        int ID = temp.firstPiece.getID();
         Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
         int[] moveTo = temp.firstPieceLastPos;
         int[] moveFrom = movingPiece.getPosition();
@@ -177,15 +179,13 @@ public class Board extends JPanel {
 
         if (!temp.firstTakenPieces.isEmpty()) {
             for (Piece p : temp.firstTakenPieces) {
-                System.out.println(temp.tempGrid[4][5].getIsOccupied());
-                int takenID = p.getID();
                 try {
-                    this.game.getHuman().removeAPiece(takenID);
+                    this.game.getHuman().removeAPiece(p.getID());
                 } catch (Exception e) {
 
                 }
                 try {
-                    this.game.getComputer().removeAPiece(takenID);
+                    this.game.getComputer().removeAPiece(p.getID());
                 } catch (Exception e) {
 
                 }
@@ -195,7 +195,7 @@ public class Board extends JPanel {
                 this.repaint();
             }
         }
-        movingPiece.setIsKing(temp.firstMovingPiece.getIsKing());
+        movingPiece.setIsKing(temp.firstPiece.getIsKing());
     }
 
     public void selectAPiece(Tile t, Board board) {
