@@ -141,7 +141,7 @@ public class Game {
     }
 
     public boolean endCheck() {
-        return (this.currentPlayer.getPieces().isEmpty());
+        return (this.human.getPieces().isEmpty() || this.computer.getPieces().isEmpty());
     }
 
     public void switchCurrentPlayer() {
@@ -312,7 +312,7 @@ public class Game {
             return temp;
         }
 
-        Temp result = new Temp();
+        Temp result = new Temp(temp);
         ArrayList<Temp> temps = new ArrayList<>();
         if (max_player) {
             for (Piece p : temp.computerPieces) {
@@ -370,16 +370,18 @@ public class Game {
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
             System.out.println(candPos[0] + " " + candPos[1] + "    " + takenPos[0] + " " + takenPos[1]);
-            temp.movingPiece.setPosition(candPos);
+            newTemp.movingPiece.setPosition(candPos);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
             newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
             newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
 
             if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsKing()) {
-                newTemp.forced = false;
                 temp.movingPiece.setIsKing(true);
-            } else if (candPos[0] == 0 || candPos[0] == 7) {
+                continue;
+            }
+
+            if (candPos[0] == 0 || candPos[0] == 7) {
                 temp.movingPiece.setIsKing(true);
             }
 
@@ -409,7 +411,7 @@ public class Game {
 
     public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
 
-        temp.movingPiece = p;
+        temp.movingPiece = new Piece(p);
         int[] movingPiecePos = temp.movingPiece.getPosition();
         System.out.println(movingPiecePos[0]);
         HashMap<Tile, Tile> cands = temp.calculateCandidates(temp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
@@ -428,7 +430,7 @@ public class Game {
                     newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
                     if (candPos[0] == 0 || candPos[0] == 7) {
-                        newTemp.tempGrid[candPos[0]][candPos[1]].getOccupiedBy().setIsKing(true);
+                        newTemp.movingPiece.setIsKing(true);
                     }
                     newTemp.heuristicScore = heuristic1(newTemp);
                     if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {

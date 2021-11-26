@@ -28,7 +28,9 @@ public class Temp {
         if (temp.firstPiece != null) {
             this.firstPiece = new Piece(temp.firstPiece);
         }
-        this.firstTakenPieces = temp.firstTakenPieces;
+        for (Piece p : temp.firstTakenPieces) {
+            this.firstTakenPieces.add(p);
+        }
         this.firstPieceLastPos = temp.firstPieceLastPos;
         for (Piece p : temp.humanPieces) {
             this.humanPieces.add(p);
@@ -36,8 +38,13 @@ public class Temp {
         for (Piece p : temp.computerPieces) {
             this.computerPieces.add(p);
         }
-        this.movingPiece = temp.movingPiece;
-        this.takenPieces = temp.takenPieces;
+        if (temp.movingPiece != null) {
+            this.movingPiece = new Piece(temp.movingPiece);
+
+        }
+        for (Piece p : temp.takenPieces) {
+            this.takenPieces.add(p);
+        }
         this.heuristicScore = temp.heuristicScore;
         this.forced = temp.forced;
     }

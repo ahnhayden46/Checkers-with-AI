@@ -124,6 +124,10 @@ public class Board extends JPanel {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
 
+                if (board.game.endCheck()) {
+
+                }
+
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
                     board.selectAPiece(t, board);
                     board.repaint();
@@ -179,16 +183,7 @@ public class Board extends JPanel {
 
         if (!temp.firstTakenPieces.isEmpty()) {
             for (Piece p : temp.firstTakenPieces) {
-                try {
-                    this.game.getHuman().removeAPiece(p.getID());
-                } catch (Exception e) {
-
-                }
-                try {
-                    this.game.getComputer().removeAPiece(p.getID());
-                } catch (Exception e) {
-
-                }
+                this.game.getHuman().removeAPiece(p.getID());
                 int[] pos = p.getPosition();
                 this.grid[pos[0]][pos[1]].setOccupiedBy(null);
                 this.grid[pos[0]][pos[1]].setIsOccupied(false);
