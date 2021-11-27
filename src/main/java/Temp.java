@@ -74,6 +74,26 @@ public class Temp {
         }
     }
 
+    public int numberOfComputerKings() {
+        int i = 0;
+        for (Piece p : this.computerPieces) {
+            if (p.getIsKing()) {
+                i++;
+            }
+        }
+        return i;
+    }
+
+    public int numberOfHumanKings() {
+        int i = 0;
+        for (Piece p : this.humanPieces) {
+            if (p.getIsKing()) {
+                i++;
+            }
+        }
+        return i;
+    }
+
     public int findPieceIndexByID(int ID, ArrayList<Piece> pieces) {
         boolean found = false;
         int i = 0;
