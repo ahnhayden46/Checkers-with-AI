@@ -22,6 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
 
 import java.awt.event.MouseEvent;
 
@@ -124,8 +125,8 @@ public class Board extends JPanel {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
 
-                if (board.game.endCheck()) {
-
+                if (board.game.endCheck() != null) {
+                    JOptionPane.showMessageDialog(board, board.game.endCheck() + " has won!");
                 }
 
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
@@ -159,8 +160,6 @@ public class Board extends JPanel {
                     board.repaint();
                     board.getGame().setCurrentPlayer(board.getGame().getHuman());
                     board.getGame().setOpponentPlayer(board.getGame().getComputer());
-                    System.out.println(board.getGame().getHuman().getPieces().size() + " "
-                            + board.getGame().getComputer().getPieces().size());
                 }
 
             }
@@ -193,10 +192,9 @@ public class Board extends JPanel {
                 int[] pos = p.getPosition();
                 this.grid[pos[0]][pos[1]].setOccupiedBy(null);
                 this.grid[pos[0]][pos[1]].setIsOccupied(false);
-                this.repaint();
             }
         }
-        System.out.println(movingPiece.getIsKing() + " " + temp.firstPiece.getIsKing());
+
     }
 
     public void selectAPiece(Tile t, Board board) {
@@ -311,11 +309,11 @@ public class Board extends JPanel {
             public void run() {
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 Board board = new Board(screenSize);
-                boolean game = true;
                 JFrame window = new JFrame();
                 // frame.setSize(this.getScreenSize());
                 window.setSize(screenSize);
                 window.add(board, BorderLayout.CENTER);
+                window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 window.setVisible(true);
             }
         });

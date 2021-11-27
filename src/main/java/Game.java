@@ -140,8 +140,14 @@ public class Game {
         this.computer = computer;
     }
 
-    public boolean endCheck() {
-        return (this.human.getPieces().isEmpty() || this.computer.getPieces().isEmpty());
+    public String endCheck() {
+        if (this.human.getPieces().isEmpty()) {
+            return "Computer";
+        } else if (this.computer.getPieces().isEmpty()) {
+            return "Human";
+        }
+
+        return null;
     }
 
     public void switchCurrentPlayer() {
@@ -302,13 +308,43 @@ public class Game {
 
     // Count how many pieces do the player have more than the opponent (Could be
     // minus)
+
+    public int heuristic(Temp temp) {
+        int score;
+        switch (this.difficulty) {
+            case 0:
+                score = heuristic1(temp);
+                break;
+
+            case 1:
+                score = heuristic2(temp);
+                break;
+
+            case 2:
+                score = heuristic3(temp);
+                break;
+
+            default:
+                score = heuristic1(temp);
+        }
+        return score;
+    }
+
     public int heuristic1(Temp temp) {
-        return temp.numberOfComputerKings() - temp.numberOfHumanKings();
+        return temp.firstTakenPieces.size();
+    }
+
+    public int heuristic2(Temp temp) {
+        return temp.firstTakenPieces.size() + temp.numberOfComputerKings();
+    }
+
+    public int heuristic3(Temp temp) {
+        return temp.firstTakenPieces.size() + temp.numberOfComputerKings() - temp.numberOfHumanKings();
     }
 
     public Temp minimax(Temp temp, int depth, boolean max_player, int alpha, int beta) {
         if (depth == 0) {
-            temp.heuristicScore = heuristic1(temp);
+            temp.heuristicScore = heuristic(temp);
             return temp;
         }
 
@@ -357,7 +393,7 @@ public class Game {
 
     public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps, int depth) {
         if (!temp.forced) {
-            temp.heuristicScore = heuristic1(temp);
+            temp.heuristicScore = heuristic(temp);
             if (depth == 2 && temp.firstPiece.getID() == temp.movingPiece.getID()) {
                 temp.firstPieceLastPos = temp.movingPiece.getPosition();
                 temp.firstPiece.setIsKing(temp.movingPiece.getIsKing());
@@ -394,14 +430,12 @@ public class Game {
                 newTemp.firstTakenPieces.add(new Piece(takenPiece));
             }
 
-            newTemp.takenPieces.add(takenPiece);
-
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
 
             if (takenPiece.getIsKing()) {
                 newTemp.movingPiece.setIsKing(true);
-                newTemp.heuristicScore = heuristic1(temp);
+                newTemp.heuristicScore = heuristic(temp);
                 if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                     newTemp.firstPieceLastPos = newTemp.movingPiece.getPosition();
                     newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
@@ -438,7 +472,7 @@ public class Game {
                     if (candPos[0] == 0 || candPos[0] == 7) {
                         newTemp.movingPiece.setIsKing(true);
                     }
-                    newTemp.heuristicScore = heuristic1(newTemp);
+                    newTemp.heuristicScore = heuristic(newTemp);
                     if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                         newTemp.firstPieceLastPos = candPos;
                         newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());

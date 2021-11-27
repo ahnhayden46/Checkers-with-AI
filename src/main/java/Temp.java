@@ -8,7 +8,6 @@ public class Temp {
     public Piece movingPiece;
     public Piece firstPiece;
     public ArrayList<Piece> firstTakenPieces = new ArrayList<>();
-    public ArrayList<Piece> takenPieces = new ArrayList<>();
     public int heuristicScore = 0;
     public boolean forced;
     public ArrayList<Piece> humanPieces = new ArrayList<>();
@@ -41,9 +40,6 @@ public class Temp {
         if (temp.movingPiece != null) {
             this.movingPiece = new Piece(temp.movingPiece);
 
-        }
-        for (Piece p : temp.takenPieces) {
-            this.takenPieces.add(p);
         }
         this.heuristicScore = temp.heuristicScore;
         this.forced = temp.forced;
