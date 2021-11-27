@@ -13,32 +13,38 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.IntStream;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
+import javax.swing.border.Border;
 
 import java.awt.event.MouseEvent;
-
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
+import java.awt.FlowLayout;
 
 public class Board extends JPanel {
 
     private Tile[][] grid = new Tile[8][8];
     private Dimension screenSize;
-    private double tileSize;
+    private int tileSize;
     private Game game;
     private GridBagConstraints c = new GridBagConstraints();
 
     public Board(Dimension screenSize) {
         this.screenSize = screenSize;
-        this.tileSize = (Math.min(screenSize.getHeight(), screenSize.getWidth()) / 16);
+        this.tileSize = (int) (Math.min(screenSize.getHeight(), screenSize.getWidth()) / 16);
         this.game = new Game();
         this.setGrid();
         this.initComponents();
@@ -73,7 +79,7 @@ public class Board extends JPanel {
         return tileSize;
     }
 
-    public void setTileSize(double tileSize) {
+    public void setTileSize(int tileSize) {
         this.tileSize = tileSize;
     }
 
@@ -121,6 +127,10 @@ public class Board extends JPanel {
         }
     }
 
+    public void setHintTileInGrid(int[] pos, boolean isHint) {
+        this.grid[pos[0]][pos[1]].setIsHint(isHint);
+    }
+
     public void initMouseAdapter(Tile t, Board board) {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -130,6 +140,12 @@ public class Board extends JPanel {
                 }
 
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
+                    if (board.game.getHintTile() != null) {
+                        Tile hintTile = board.game.getHintTile();
+                        int[] pos = hintTile.getPosition();
+                        board.setHintTileInGrid(pos, false);
+                        board.game.setHintTile(null);
+                    }
                     board.selectAPiece(t, board);
                     board.repaint();
 
@@ -164,6 +180,22 @@ public class Board extends JPanel {
 
             }
         });
+    }
+
+    public void enableHints() {
+        if (this.game.getCurrentPlayer().getIsHuman()) {
+            Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
+            temp = this.game.minimax(temp, 2, true, -10000, 10000);
+            int ID = temp.firstPiece.getID();
+            int index = this.game.getHuman().findPieceIndexByID(ID);
+            int[] pos = this.game.getHuman().getPieces().get(index).getPosition();
+            Tile hintTile = this.grid[pos[0]][pos[1]];
+            hintTile.setIsHint(true);
+            this.game.setHintTile(hintTile);
+            this.repaint();
+        } else {
+            JOptionPane.showMessageDialog(this, "Hints are available when it's your turn.");
+        }
     }
 
     public void computerTurn() {
@@ -310,9 +342,25 @@ public class Board extends JPanel {
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 Board board = new Board(screenSize);
                 JFrame window = new JFrame();
-                // frame.setSize(this.getScreenSize());
+                int tileSize = board.tileSize;
+                window.setLayout(new FlowLayout(FlowLayout.CENTER));
+                JPanel ui = new JPanel();
+                JButton enableHints = new JButton("HINTS");
+                enableHints.setBounds(tileSize, tileSize, tileSize, tileSize);
+                enableHints.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        board.enableHints();
+                    }
+                });
+                ui.setLayout(new GridBagLayout());
+                GridBagConstraints c = new GridBagConstraints();
+                c.insets = new Insets(tileSize / 5, tileSize / 5, tileSize / 5, tileSize / 5);
+                c.gridx = 0;
+                c.gridy = 0;
+                ui.add(enableHints, c);
                 window.setSize(screenSize);
-                window.add(board, BorderLayout.CENTER);
+                window.add(board);
+                window.add(ui);
                 window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 window.setVisible(true);
             }

@@ -27,6 +27,7 @@ public class Tile extends JPanel {
     private int tileSize;
     private boolean isCurrent = false;
     private boolean isCandidate = false;
+    private boolean isHint = false;
 
     public Tile(Tile t) {
         this.position = t.position;
@@ -41,14 +42,23 @@ public class Tile extends JPanel {
         this.tileSize = t.tileSize;
         this.isCurrent = t.isCurrent;
         this.isCandidate = t.isCandidate;
+        this.isHint = t.isHint;
     }
 
-    public Tile(int[] position, double tileSize) {
+    public Tile(int[] position, int tileSize) {
         this.position = position;
         this.setIsLight();
         this.setIsEnd();
-        this.tileSize = (int) tileSize;
+        this.tileSize = tileSize;
         this.setPreferredSize(new Dimension((int) tileSize, (int) tileSize));
+    }
+
+    public boolean getIsHint() {
+        return isHint;
+    }
+
+    public void setIsHint(boolean isHint) {
+        this.isHint = isHint;
     }
 
     @Override
@@ -80,6 +90,10 @@ public class Tile extends JPanel {
                     g.drawOval(this.tileSize / 3, this.tileSize / 3, this.tileSize / 3, this.tileSize / 3);
                 }
             }
+        }
+
+        if (this.isHint) {
+            this.setBackground(Color.PINK);
         }
     }
 
