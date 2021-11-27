@@ -180,9 +180,15 @@ public class Board extends JPanel {
         this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
         this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
         this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+        if (moveTo[0] == 0 || moveTo[0] == 7) {
+            movingPiece.setIsKing(true);
+        }
 
         if (!temp.firstTakenPieces.isEmpty()) {
             for (Piece p : temp.firstTakenPieces) {
+                if (p.getIsKing()) {
+                    movingPiece.setIsKing(true);
+                }
                 this.game.getHuman().removeAPiece(p.getID());
                 int[] pos = p.getPosition();
                 this.grid[pos[0]][pos[1]].setOccupiedBy(null);
@@ -190,7 +196,7 @@ public class Board extends JPanel {
                 this.repaint();
             }
         }
-        movingPiece.setIsKing(temp.firstPiece.getIsKing());
+        System.out.println(movingPiece.getIsKing() + " " + temp.firstPiece.getIsKing());
     }
 
     public void selectAPiece(Tile t, Board board) {

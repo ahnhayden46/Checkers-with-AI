@@ -303,7 +303,7 @@ public class Game {
     // Count how many pieces do the player have more than the opponent (Could be
     // minus)
     public int heuristic1(Temp temp) {
-        return temp.computerPieces.size() - temp.humanPieces.size();
+        return temp.takenPieces.size();
     }
 
     public Temp minimax(Temp temp, int depth, boolean max_player, int alpha, int beta) {
@@ -376,33 +376,33 @@ public class Game {
             newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
             newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
 
-            if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsKing()) {
-                temp.movingPiece.setIsKing(true);
-                continue;
-            }
-
             if (candPos[0] == 0 || candPos[0] == 7) {
                 temp.movingPiece.setIsKing(true);
             }
 
-            int takenID = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getID();
+            Piece takenPiece = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy();
 
-            if (newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy().getIsWhite()) {
-                newTemp.humanPieces.remove(newTemp.findPieceIndexByID(takenID, newTemp.humanPieces));
+            if (takenPiece.getIsWhite()) {
+                newTemp.humanPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.humanPieces));
             } else {
-                newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenID, newTemp.computerPieces));
+                newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.computerPieces));
             }
 
             if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
-                newTemp.firstTakenPieces.add(new Piece(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy()));
+                newTemp.firstTakenPieces.add(new Piece(takenPiece));
             }
 
-            newTemp.takenPieces.add(newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy());
+            newTemp.takenPieces.add(takenPiece);
+
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
 
-            HashMap<Tile, Tile> newCands = newTemp
-                    .calculateCandidates(newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
+            if (takenPiece.getIsKing()) {
+                temp.movingPiece.setIsKing(true);
+                continue;
+            }
+
+            HashMap<Tile, Tile> newCands = newTemp.calculateCandidates(newTemp.tempGrid[candPos[0]][candPos[1]]);
 
             temps = getPieceForcedMove(newTemp, newCands, temps, depth);
         }
