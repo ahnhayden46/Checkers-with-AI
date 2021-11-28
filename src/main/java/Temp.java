@@ -1,22 +1,26 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+// A class containing information of a state for the minimax algorithm.
 public class Temp {
 
     public Tile[][] tempGrid = new Tile[8][8];
-    public int[] firstPieceLastPos;
-    public Piece movingPiece;
-    public Piece firstPiece;
-    public ArrayList<Piece> firstTakenPieces = new ArrayList<>();
-    public int heuristicScore = 0;
-    public boolean forced;
+    public Piece movingPiece; // Currently moving piece
+    public Piece firstPiece; // The firstly selected piece (since the minimax will explore several depths of
+                             // states, it should remember what was the piece that moved first)
+    public int[] firstPieceLastPos; // The last position of the first piece, i.e., the position to which the piece
+                                    // on the real board should move.
+    public ArrayList<Piece> firstTakenPieces = new ArrayList<>(); // An arraylist of pieces that were taken by the first
+                                                                  // piece on the first move.
+    public int heuristicScore = 0; // Evaluation of the state
+    public boolean forced; // If the current piece has performed forced capture.
     public ArrayList<Piece> humanPieces = new ArrayList<>();
     public ArrayList<Piece> computerPieces = new ArrayList<>();
 
     public Temp() {
-
     }
 
+    // A constructor that copies another temp object.
     public Temp(Temp temp) {
         for (int i = 0; i <= 7; i++) {
             for (int j = 0; j <= 7; j++) {
@@ -70,6 +74,7 @@ public class Temp {
         }
     }
 
+    // Returns the number of the kings in the computer pieces.
     public int numberOfComputerKings() {
         int i = 0;
         for (Piece p : this.computerPieces) {
@@ -80,6 +85,7 @@ public class Temp {
         return i;
     }
 
+    // Returns the number of the kings in the computer pieces.
     public int numberOfHumanKings() {
         int i = 0;
         for (Piece p : this.humanPieces) {
@@ -90,6 +96,7 @@ public class Temp {
         return i;
     }
 
+    // Finds the index of a specific piece in the given arraylist by its ID.
     public int findPieceIndexByID(int ID, ArrayList<Piece> pieces) {
         boolean found = false;
         int i = 0;
@@ -103,6 +110,7 @@ public class Temp {
         return i;
     }
 
+    // The same code as in the Game class but added here for coding convenience.
     public HashMap<Tile, Tile> calculateCandidates(Tile current) {
 
         HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>();
@@ -111,7 +119,6 @@ public class Temp {
         // Check if the given tile is occupied by any piece.
         if (current.getIsOccupied() == true) {
             int forward = 0;
-            // int backward = 0;
             int[] position = current.getPosition();
             // If it is occupied, check whether it is a human player's or a computer
             // player's.
@@ -122,58 +129,35 @@ public class Temp {
                 forward = 1;
             }
 
-            // ArrayList<int[][]> targetAndOppositePos = new ArrayList<>();
-            // // Nested int array consists of the {x, y} coordinates of the target tile and
-            // // one over it.
-            // int[][] pos1 = { { position[0] + forward, position[1] + 1 },
-            // { position[0] + (2 * forward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos1);
-            // int[][] pos2 = { { position[0] + forward, position[1] - 1 },
-            // { position[0] + (2 * forward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos2);
-
-            // // If the occupying piece is a king, calculate backward direction too.
-            // if (current.getOccupiedBy().getIsKing()) {
-            // if (current.getOccupiedBy().getIsWhite()) {
-            // backward = 1;
-            // } else {
-            // backward = -1;
-            // }
-            // int[][] pos3 = { { position[0] + backward, position[1] + 1 },
-            // { position[0] + (2 * backward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos3);
-            // int[][] pos4 = { { position[0] + backward, position[1] - 1 },
-            // { position[0] + (2 * backward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos4);
-            // }
-
-            // for (int[][] pos : targetAndOppositePos) {
-            // if(pos)
-            // if (t.getIsOccupied()) {
-            // if (this.isOccupiedByOpponent(current, t)) {
-
-            // }
-            // }
-            // }
-            // Append to the candidates array the forward diagonal tiles first.
-            // In case it is facing the end of the board, use try{}.
+            // Check each diagonal tiles if they are available.
             try {
                 Tile t = this.tempGrid[position[0] + forward][position[1] + 1];
+                // Check if the tile is occupied.
                 if (t.getIsOccupied() == true) {
+                    // If it is, check if it's occupied by an opponent piece.
                     if (Game.isOccupiedByOpponent(current, t)) {
                         int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] + 1 };
+                        // Make sure the tile position is not pointing outside the grid.
                         if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
                             Tile oppositeTile = this.tempGrid[oppositePos[0]][oppositePos[1]];
+                            // If it is, check if the tile beyond the occupied tile is empty so the moving
+                            // piece can proceed to it.
                             if (!oppositeTile.getIsOccupied()) {
+                                // Add the tile to the forced candidates hashmap which contains the tile that
+                                // the piece should be placed on and the tile that it jumped over.
                                 forcedCandidates.put(oppositeTile, t);
                             }
                         }
                     }
+                    // If the tile is empty, just add it as a key to the candidate hashmap with a
+                    // 'null' value.
                 } else {
                     candidates.put(t, null);
                 }
             } catch (Exception e) {
             }
+
+            // Repeat the same process for all the diagonal tiles from the given tile.
             try {
                 Tile t = this.tempGrid[position[0] + forward][position[1] - 1];
                 if (t.getIsOccupied() == true) {
@@ -192,7 +176,7 @@ public class Temp {
             } catch (Exception e) {
             }
 
-            // If the piece is a king, calculate backward candidates too.
+            // If the piece is a king, calculate backward diagonal candidates too.
             if (current.getOccupiedBy().getIsKing()) {
                 int backward;
                 if (current.getOccupiedBy().getIsWhite()) {
@@ -241,10 +225,15 @@ public class Temp {
             }
         }
 
+        // If any forced candidate tile was given, return the forced candidates hashmap
+        // and set the current temp object's 'forced' value to true so further
+        // algorithms can decide appropriate actions.
         if (!forcedCandidates.isEmpty()) {
             this.forced = true;
             return forcedCandidates;
         }
+
+        // Otherwise, return the normal candidates hashmap.
         this.forced = false;
         return candidates;
     }

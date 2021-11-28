@@ -13,6 +13,7 @@ import javax.swing.JOptionPane;
  * @author hayden
  */
 
+// A class containing information for gameplay.
 public class Game {
     /**
      * @param args the command line arguments
@@ -22,102 +23,30 @@ public class Game {
     private Player opponentPlayer;
     private Player human;
     private Player computer;
-    private int difficulty = 0;
+    private int difficulty = 0; // Difficulty of the game -> set when the object is initialised.
 
-    private Tile currentTile = null;
-    private ArrayList<Tile> hintTiles = new ArrayList<>();
-    private HashMap<Tile, Tile> candidates = null;
-    private boolean forced = false;
-    private boolean moved = false;
-    private boolean kingCaptured = false;
-    private boolean captured = false;
+    private Tile currentTile = null; // The tile selected as current by the selecting a piece method in the Board
+                                     // class.
+    private ArrayList<Tile> hintTiles = new ArrayList<>(); // An arraylist of the hint tiles calculated by the enabling
+                                                           // hints method in the Board class.
+    private HashMap<Tile, Tile> candidates = null; // A hashmap that contains tiles to which the current moving piece
+                                                   // can go as keys and tiles that it should jump over as values.
+    private boolean forced = false; // Indicates that the current piece performed a forced capture.
+    private boolean moved = false; // Indicates that any piece has moved to another tile.
+    private boolean kingCaptured = false; // Indicates that a king has been captured.
+    private boolean captured = false; // Indicates that any piece has been captured.
 
     public Game() {
         this.human = new Human();
         this.computer = new Computer();
         this.currentPlayer = human;
         this.opponentPlayer = computer;
+        // Sets the difficulty for the game by asking the player
         this.setDifficulty();
     }
 
-    public ArrayList<Tile> getHintTiles() {
-        return hintTiles;
-    }
-
-    public void addHintTile(Tile hintTile) {
-        this.hintTiles.add(hintTile);
-    }
-
-    public Tile getCurrentTile() {
-        return currentTile;
-    }
-
-    public void setCurrentTile(Tile currentTile) {
-        this.currentTile = currentTile;
-        if (currentTile != null) {
-            currentTile.setIsCurrent(true);
-        }
-    }
-
-    public boolean getForced() {
-        return forced;
-    }
-
-    public void setForced(boolean forced) {
-        this.forced = forced;
-    }
-
-    public HashMap<Tile, Tile> getCandidates() {
-        return candidates;
-    }
-
-    public void setCandidates(HashMap<Tile, Tile> candidates) {
-        this.candidates = candidates;
-        if (candidates != null) {
-            for (Tile tile : candidates.keySet()) {
-
-                tile.setIsCandidate(true);
-            }
-        }
-
-    }
-
-    public boolean getMoved() {
-        return moved;
-    }
-
-    public void setMoved(boolean moved) {
-        this.moved = moved;
-    }
-
-    public boolean getCaptured() {
-        return captured;
-    }
-
-    public void setCaptured(boolean captured) {
-        this.captured = captured;
-    }
-
-    public boolean getKingCaptured() {
-        return kingCaptured;
-    }
-
-    public void setKingCaptured(boolean kingCaptured) {
-        this.kingCaptured = kingCaptured;
-    }
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    public void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-    }
-
-    public int getDifficulty() {
-        return difficulty;
-    }
-
+    // Sets the difficulty by showing an option dialog.
+    // Easy, normal, and hard modes are available.
     public void setDifficulty() {
         String[] options = { "Easy", "Normal", "Hard" };
         int x = JOptionPane.showOptionDialog(null, "Please choose the difficulty.", "Difficulty Options",
@@ -125,30 +54,8 @@ public class Game {
         this.difficulty = x;
     }
 
-    public Player getOpponentPlayer() {
-        return opponentPlayer;
-    }
-
-    public void setOpponentPlayer(Player opponentPlayer) {
-        this.opponentPlayer = opponentPlayer;
-    }
-
-    public Player getHuman() {
-        return human;
-    }
-
-    public void setHuman(Player human) {
-        this.human = human;
-    }
-
-    public Player getComputer() {
-        return computer;
-    }
-
-    public void setComputer(Player computer) {
-        this.computer = computer;
-    }
-
+    // Checks if the game has ended, i.e., if either of the players doesn't have any
+    // piece left and if it has, returns which player has won.
     public String endCheck() {
         if (this.human.getPieces().isEmpty()) {
             return "Computer";
@@ -159,16 +66,17 @@ public class Game {
         return null;
     }
 
-    public void switchCurrentPlayer() {
-        Player current = this.currentPlayer;
-        this.currentPlayer = this.opponentPlayer;
-        this.opponentPlayer = current;
-    }
-
+    // Checks if the tiles given are occupied by different players.
     public static boolean isOccupiedByOpponent(Tile currentTile, Tile targetTile) {
         return (currentTile.getOccupiedBy().getIsWhite() != targetTile.getOccupiedBy().getIsWhite());
     }
 
+    // Successor functions.
+    // Calculate the candidate tiles to which the piece on the tile given can go
+    // after checking the validity.
+    // Returns a hashmap containing keys which are the possible destinations of the
+    // moving piece and values which are the tiles that the piece should jump over
+    // if it has to.
     public HashMap<Tile, Tile> calculateCandidates(Tile[][] grid, Tile current) {
 
         HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>();
@@ -279,9 +187,7 @@ public class Game {
         return candidates;
     }
 
-    // Count how many pieces do the player have more than the opponent (Could be
-    // minus)
-
+    // Decides which heuristic to use depending on the difficulty of the game.
     public int heuristic(Temp temp) {
         int score;
         switch (this.difficulty) {
@@ -303,50 +209,84 @@ public class Game {
         return score;
     }
 
+    // The hueristic for easy mode,
+    // only calculates how many pieces the player can take at this turn.
     public int heuristic1(Temp temp) {
         return temp.firstTakenPieces.size();
     }
 
+    // The hueristic for normal mode,
+    // reflects how many more pieces the computer will have than the human after
+    // exploring the minimax algorithm and the number of king pieces of the
+    // computer.
     public int heuristic2(Temp temp) {
-        return temp.firstTakenPieces.size() + temp.numberOfComputerKings();
+        return (temp.computerPieces.size() - temp.humanPieces.size()) + temp.numberOfComputerKings() * 2;
     }
 
+    // The heuristic for hard mode,
+    // reflects the second heuristic plus the number of king pieces of the human
+    // player.
     public int heuristic3(Temp temp) {
-        return temp.firstTakenPieces.size() + temp.numberOfComputerKings() - temp.numberOfHumanKings();
+        return (temp.computerPieces.size() - temp.humanPieces.size()) + temp.numberOfComputerKings() * 2
+                - temp.numberOfHumanKings();
     }
 
+    // The minimax algorithm for the computer and showing hints to the human player.
+    // Returns a temp object that contains not only the heuristic score but also the
+    // information of moves.
+    // A recursive method
     public Temp minimax(Temp temp, int depth, boolean max_player, int alpha, int beta) {
+        // Returns the temp object with a heuristic score when it reaches the set depth.
         if (depth == 0) {
             temp.heuristicScore = heuristic(temp);
             return temp;
         }
 
         Temp result = new Temp(temp);
+        // An arraylist of temp objects that will store possible states (nodes).
         ArrayList<Temp> temps = new ArrayList<>();
+
+        // When it should maximise the score.
         if (max_player) {
+            // For each piece, calculate possible future states.
             for (Piece p : temp.computerPieces) {
                 temp.movingPiece = temp.computerPieces.get(temp.findPieceIndexByID(p.getID(), temp.computerPieces));
                 temps = getPieceAllMoves(temp, p, temps, depth);
+                // For every state calculated,
                 for (Temp temp2 : temps) {
+                    // Expand nodes by calling the method recursively.
+                    // Change the 'max_player' value to false so it can maximise the state score on
+                    // the next depth.
                     temp2 = minimax(temp2, depth - 1, false, alpha, beta);
+
+                    // Implement alpha-beta pruning
+                    // If the current state's heuristic score is higher than alpha, make the state
+                    // alpha and update the alpha value.
                     if (alpha <= temp2.heuristicScore) {
                         alpha = temp2.heuristicScore;
                         result = temp2;
+                        // If alpha is bigger than beta, break the loop and stop exploring further.
                         if (beta <= alpha) {
                             break;
                         }
                     }
                 }
+                // Since I divided getting all the possible states into two steps, break it once
+                // more outside the nested for loop.
                 if (beta <= alpha) {
                     break;
                 }
             }
             return result;
+
+            // When it should minimise the score.
         } else {
             for (Piece p : temp.humanPieces) {
                 temp.movingPiece = temp.humanPieces.get(temp.findPieceIndexByID(p.getID(), temp.humanPieces));
                 temps = getPieceAllMoves(temp, p, temps, depth);
                 for (Temp temp2 : temps) {
+                    // Change the 'max_player' value to true so it can maximise the state score on
+                    // the next depth.
                     temp2 = minimax(temp2, depth - 1, true, alpha, beta);
                     if (beta >= temp2.heuristicScore) {
                         beta = temp2.heuristicScore;
@@ -364,10 +304,17 @@ public class Game {
         }
     }
 
+    // Returns an arraylist with possible states with forced capturing moves.
+    // A recursive method that stops when there's not any forced capture
+    // possibleanymore.
     public ArrayList<Temp> getPieceForcedMove(Temp temp, HashMap<Tile, Tile> cands, ArrayList<Temp> temps, int depth) {
+        // If there's not forced capture possible,
         if (!temp.forced) {
+            // Evaluate the state
             temp.heuristicScore = heuristic(temp);
+            // When it's calculating the first move of the firstly selected piece,
             if (depth == 2 && temp.firstPiece.getID() == temp.movingPiece.getID()) {
+                // Update the information of the first piece.
                 temp.firstPieceLastPos = temp.movingPiece.getPosition();
                 temp.firstPiece.setIsKing(temp.movingPiece.getIsKing());
             }
@@ -375,8 +322,12 @@ public class Game {
             return temps;
         }
 
+        // For each candidate tiles,
         for (Tile t : cands.keySet()) {
+            // Create a new temp object and retrieve the current information.
             Temp newTemp = new Temp(temp);
+            // Get the position of the current piece, its candidate, and the tile it should
+            // jump over.
             int[] movingPiecePos = newTemp.movingPiece.getPosition();
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
@@ -461,5 +412,108 @@ public class Game {
             }
         }
         return temps;
+    }
+
+    // Getters and setters from here.
+    public Player getOpponentPlayer() {
+        return opponentPlayer;
+    }
+
+    public void setOpponentPlayer(Player opponentPlayer) {
+        this.opponentPlayer = opponentPlayer;
+    }
+
+    public Player getHuman() {
+        return human;
+    }
+
+    public void setHuman(Player human) {
+        this.human = human;
+    }
+
+    public Player getComputer() {
+        return computer;
+    }
+
+    public void setComputer(Player computer) {
+        this.computer = computer;
+    }
+
+    public ArrayList<Tile> getHintTiles() {
+        return hintTiles;
+    }
+
+    public void addHintTile(Tile hintTile) {
+        this.hintTiles.add(hintTile);
+    }
+
+    public Tile getCurrentTile() {
+        return currentTile;
+    }
+
+    public void setCurrentTile(Tile currentTile) {
+        this.currentTile = currentTile;
+        if (currentTile != null) {
+            currentTile.setIsCurrent(true);
+        }
+    }
+
+    public boolean getForced() {
+        return forced;
+    }
+
+    public void setForced(boolean forced) {
+        this.forced = forced;
+    }
+
+    public HashMap<Tile, Tile> getCandidates() {
+        return candidates;
+    }
+
+    public void setCandidates(HashMap<Tile, Tile> candidates) {
+        this.candidates = candidates;
+        if (candidates != null) {
+            for (Tile tile : candidates.keySet()) {
+
+                tile.setIsCandidate(true);
+            }
+        }
+
+    }
+
+    public boolean getMoved() {
+        return moved;
+    }
+
+    public void setMoved(boolean moved) {
+        this.moved = moved;
+    }
+
+    public boolean getCaptured() {
+        return captured;
+    }
+
+    public void setCaptured(boolean captured) {
+        this.captured = captured;
+    }
+
+    public boolean getKingCaptured() {
+        return kingCaptured;
+    }
+
+    public void setKingCaptured(boolean kingCaptured) {
+        this.kingCaptured = kingCaptured;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public int getDifficulty() {
+        return difficulty;
     }
 }

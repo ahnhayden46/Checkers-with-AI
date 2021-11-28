@@ -7,6 +7,8 @@
  *
  * @author hayden
  */
+
+// A class representing a checker piece on the board.
 public class Piece {
 
     private int[] position;
@@ -28,6 +30,7 @@ public class Piece {
         this.ID = p.ID;
     }
 
+    // Getters and setters from here.
     public int getID() {
         return ID;
     }

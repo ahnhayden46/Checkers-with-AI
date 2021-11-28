@@ -14,18 +14,22 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
+// A class representing each tile of the board.
+// The board consists of 8*8 tile objects.
 public class Tile extends JPanel {
 
     private int[] position;
-    private boolean isLight = false;
-    private boolean isOccupied = false;
-    private Piece occupiedBy = null;
-    private boolean isEnd = false;
-    private int tileSize;
-    private boolean isCurrent = false;
-    private boolean isCandidate = false;
-    private boolean isHint = false;
+    private boolean isLight = false; // If it's colored light or dark to make a checkerboard.
+    private boolean isOccupied = false; // If it's occupied by any piece.
+    private Piece occupiedBy = null; // Which piece is occupying. -> Null if there's no piece on it.
+    private boolean isEnd = false; // If it's on the end row (the king's row)
+    private int tileSize; // The size of the tile needed to visualise on the board.
+    private boolean isCurrent = false; // If the tile is selected.
+    private boolean isCandidate = false; // If it is set as a candidate by the calculating candidates algorithm in the
+                                         // Game class.
+    private boolean isHint = false; // If it is set as a hint by the enabling hints algorithm in the Board class.
 
+    // A constructor that copies another tile object.
     public Tile(Tile t) {
         this.position = t.position;
         this.isLight = t.isLight;
@@ -50,36 +54,43 @@ public class Tile extends JPanel {
         this.setPreferredSize(new Dimension((int) tileSize, (int) tileSize));
     }
 
-    public boolean getIsHint() {
-        return isHint;
-    }
-
-    public void setIsHint(boolean isHint) {
-        this.isHint = isHint;
-    }
-
+    // A method overriding the paintComponent of JPanel class.
+    // Decides how the tile should be visualised on the board.
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        // Painted light gray or black depending on its 'isLight' value.
         this.setBackground(this.isLight ? Color.LIGHT_GRAY : Color.BLACK);
 
+        // If it is selected a current tile or a candidate or a hint.
         if (this.isCurrent) {
+            // Background color is magenta when it's a current tile.
             this.setBackground(Color.MAGENTA);
         } else if (this.isCandidate) {
+            // Background color is magenta when it's a candidate.
             this.setBackground(Color.GREEN);
+            // Background color is cyan when it's a hint.
+        } else if (this.isHint) {
+            this.setBackground(Color.CYAN);
         }
 
+        // If it is occupied by a checker piece
         if (this.isOccupied) {
+            // If the occupying piece is white, i.e., the human player's piece
             if (this.occupiedBy.getIsWhite()) {
                 Graphics2D g2d = (Graphics2D) g;
+                // Draw and paint a white circle
                 g.setColor(Color.WHITE);
                 g2d.fillOval(this.tileSize / 4, this.tileSize / 4, this.tileSize / 2, this.tileSize / 2);
                 if (occupiedBy.getIsKing()) {
                     g.setColor(Color.BLACK);
                     g.drawOval(this.tileSize / 3, this.tileSize / 3, this.tileSize / 3, this.tileSize / 3);
                 }
+                // If the occupying piece is white, i.e., the human player's piece
             } else {
                 Graphics2D g2d = (Graphics2D) g;
+                // Draw and paint a white circle
                 g.setColor(Color.RED);
                 g2d.fillOval(this.tileSize / 4, this.tileSize / 4, this.tileSize / 2, this.tileSize / 2);
                 if (occupiedBy.getIsKing()) {
@@ -89,9 +100,15 @@ public class Tile extends JPanel {
             }
         }
 
-        if (this.isHint) {
-            this.setBackground(Color.CYAN);
-        }
+    }
+
+    // Getters and setters from here.
+    public boolean getIsHint() {
+        return isHint;
+    }
+
+    public void setIsHint(boolean isHint) {
+        this.isHint = isHint;
     }
 
     public boolean getIsCurrent() {

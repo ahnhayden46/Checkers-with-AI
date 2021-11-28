@@ -30,55 +30,27 @@ import java.awt.event.MouseAdapter;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
+// A class representing the game board.
 public class Board extends JPanel {
 
-    private Tile[][] grid = new Tile[8][8];
-    private Dimension screenSize;
-    private int tileSize;
-    private Game game;
-    private GridBagConstraints c = new GridBagConstraints();
+    private Tile[][] grid = new Tile[8][8]; // Consists of 8*8 tiles.
+    private Dimension screenSize; // The screensize of the user to visualise the board.
+    private int tileSize; // The size of the tiles, shares the same value with the tile objects.
+    private Game game; // A game object that contains information needed for gameplay.
+    private GridBagConstraints c = new GridBagConstraints(); // Layout component for neat visualisation.
 
     public Board(Dimension screenSize) {
         this.screenSize = screenSize;
         this.tileSize = (int) (Math.min(screenSize.getHeight(), screenSize.getWidth()) / 16);
         this.game = new Game();
         this.setGrid();
-        this.initComponents();
+        this.setLayout(new GridBagLayout());
+        c.fill = GridBagConstraints.BOTH;
+        this.arrangeTiles();
         this.placeInitialCheckers();
     }
 
-    public GridBagConstraints getC() {
-        return c;
-    }
-
-    public void setC(GridBagConstraints c) {
-        this.c = c;
-    }
-
-    public Game getGame() {
-        return game;
-    }
-
-    public void setGame(Game game) {
-        this.game = game;
-    }
-
-    public Dimension getScreenSize() {
-        return screenSize;
-    }
-
-    public void setScreenSize(Dimension screenSize) {
-        this.screenSize = screenSize;
-    }
-
-    public double getTileSize() {
-        return tileSize;
-    }
-
-    public void setTileSize(int tileSize) {
-        this.tileSize = tileSize;
-    }
-
+    // Sets a grid by creating tile objects
     public void setGrid() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -90,25 +62,8 @@ public class Board extends JPanel {
         }
     }
 
-    public Tile[][] getGrid() {
-        return grid;
-    }
-
-    public void initComponents() {
-
-        // panel.setLocation((int)screenSize.getWidth()/2,
-        // (int)screenSize.getHeight()/2);
-        // init textfields and buttons
-        // add listeners or whatever
-
-        this.setLayout(new GridBagLayout());
-        this.updateTiles();
-        c.fill = GridBagConstraints.BOTH;
-
-        // layout settings goes here
-    }
-
-    public void updateTiles() {
+    // Place tiles on the board using the grid bag layout.
+    public void arrangeTiles() {
         int x = 0;
         int y = 0;
         for (Tile[] row : this.grid) {
@@ -123,15 +78,20 @@ public class Board extends JPanel {
         }
     }
 
+    // A method for setting a hint tile outside this class.
     public void setHintTileInGrid(int[] pos, boolean isHint) {
         this.grid[pos[0]][pos[1]].setIsHint(isHint);
     }
 
+    // Adds a mouse adapter for each tile to enable interactions between the game
+    // and the player.
     public void initMouseAdapter(Tile t, Board board) {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
 
+                // If it's the human player's turn
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
+                    // If there are hint tiles on the board, reset them.
                     if (!board.game.getHintTiles().isEmpty()) {
                         ArrayList<Tile> hintTiles = board.game.getHintTiles();
                         for (Tile t : hintTiles) {
@@ -140,31 +100,44 @@ public class Board extends JPanel {
                         }
                         board.game.getHintTiles().clear();
                     }
+
+                    // Select a piece and perform a right action depending on the current state.
                     board.selectAPiece(t, board);
                     board.repaint();
 
+                    // If any human piece has been moved
                     if (board.game.getMoved()) {
 
+                        // For multi-leg captures,
+                        // if it has captured any opponent piece and it's not a king,
                         if (board.game.getCaptured() && !board.game.getKingCaptured()) {
+                            // calculate candidates again from the moved position and see if any possible
+                            // forced capture exists.
                             HashMap<Tile, Tile> cands = board.getGame().calculateCandidates(board.getGrid(), t);
+                            // If there is a forced capture candidate, update the board to show them.
                             if (board.game.getForced()) {
                                 board.game.setCurrentTile(t);
                                 board.game.setCandidates(cands);
                                 board.repaint();
+                                // If there is not, switch the current and the opponent player.
                             } else {
                                 board.getGame().setCurrentPlayer(board.getGame().getComputer());
                                 board.getGame().setOpponentPlayer(board.getGame().getHuman());
                             }
                         }
-
+                        // If the piece didn't capture anything but only moved, switch the player turn.
                         else {
                             board.getGame().setCurrentPlayer(board.getGame().getComputer());
                             board.getGame().setOpponentPlayer(board.getGame().getHuman());
                         }
+
+                        // Reset values of the game.
                         board.game.setMoved(false);
                         board.game.setKingCaptured(false);
                         board.game.setCaptured(false);
 
+                        // Checks if the game has ended, i.e., if either of the players doesn't have any
+                        // piece left.
                         if (board.game.endCheck() != null) {
                             JOptionPane.showMessageDialog(board, board.game.endCheck() + " has won!");
                         }
@@ -174,9 +147,14 @@ public class Board extends JPanel {
         });
     }
 
+    // A method that uses the minimax algorithm for the human player and shows
+    // hints.
     public void enableHints() {
         if (this.game.getCurrentPlayer().getIsHuman()) {
+            // Calculate hints only when they were not calculated before.
             if (this.game.getHintTiles().isEmpty()) {
+                // Perform the minimax algorithm by giving the current computer pieces as human
+                // pieces and vice versa to make the algorithm work for the human player.
                 Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
                 temp = this.game.minimax(temp, 2, true, -10000, 10000);
                 int ID = temp.firstPiece.getID();
@@ -388,6 +366,44 @@ public class Board extends JPanel {
             }
         });
     }
+
+    // Getters and setters from here.
+    public GridBagConstraints getC() {
+        return c;
+    }
+
+    public void setC(GridBagConstraints c) {
+        this.c = c;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    public Dimension getScreenSize() {
+        return screenSize;
+    }
+
+    public void setScreenSize(Dimension screenSize) {
+        this.screenSize = screenSize;
+    }
+
+    public double getTileSize() {
+        return tileSize;
+    }
+
+    public void setTileSize(int tileSize) {
+        this.tileSize = tileSize;
+    }
+
+    public Tile[][] getGrid() {
+        return grid;
+    }
+
 }
 
 // i agree that u did quite a work for the last bit but before most of the time
