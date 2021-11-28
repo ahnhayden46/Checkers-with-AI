@@ -10,12 +10,9 @@
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Tile extends JPanel {
 
@@ -93,7 +90,7 @@ public class Tile extends JPanel {
         }
 
         if (this.isHint) {
-            this.setBackground(Color.PINK);
+            this.setBackground(Color.CYAN);
         }
     }
 

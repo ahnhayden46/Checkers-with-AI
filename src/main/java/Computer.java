@@ -19,7 +19,7 @@ public class Computer extends Player {
         int current = 1;
         for (int i = 1; i <= 4; i++) {
             int[] position = { 0, current };
-            Piece p = new Piece(position, false, false, (Player) this, i);
+            Piece p = new Piece(position, false, false, (Player) this, i * -1);
             this.addPieces(p);
             current += 2;
         }
@@ -27,7 +27,7 @@ public class Computer extends Player {
         current = 0;
         for (int i = 5; i <= 8; i++) {
             int[] position = { 1, current };
-            Piece p = new Piece(position, false, false, (Player) this, i);
+            Piece p = new Piece(position, false, false, (Player) this, i * -1);
             this.addPieces(p);
             current += 2;
         }
@@ -35,7 +35,7 @@ public class Computer extends Player {
         current = 1;
         for (int i = 9; i <= 12; i++) {
             int[] position = { 2, current };
-            Piece p = new Piece(position, false, false, (Player) this, i);
+            Piece p = new Piece(position, false, false, (Player) this, i * -1);
             this.addPieces(p);
             current += 2;
         }

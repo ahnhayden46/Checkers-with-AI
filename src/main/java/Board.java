@@ -8,31 +8,27 @@
  *
  * @author hayden
  */
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.stream.IntStream;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
-import javax.swing.border.Border;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.FlowLayout;
+import java.awt.Font;
 
 public class Board extends JPanel {
 
@@ -135,16 +131,14 @@ public class Board extends JPanel {
         t.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
 
-                if (board.game.endCheck() != null) {
-                    JOptionPane.showMessageDialog(board, board.game.endCheck() + " has won!");
-                }
-
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
-                    if (board.game.getHintTile() != null) {
-                        Tile hintTile = board.game.getHintTile();
-                        int[] pos = hintTile.getPosition();
-                        board.setHintTileInGrid(pos, false);
-                        board.game.setHintTile(null);
+                    if (!board.game.getHintTiles().isEmpty()) {
+                        ArrayList<Tile> hintTiles = board.game.getHintTiles();
+                        for (Tile t : hintTiles) {
+                            int[] pos = t.getPosition();
+                            board.setHintTileInGrid(pos, false);
+                        }
+                        board.game.getHintTiles().clear();
                     }
                     board.selectAPiece(t, board);
                     board.repaint();
@@ -170,68 +164,85 @@ public class Board extends JPanel {
                         board.game.setMoved(false);
                         board.game.setKingCaptured(false);
                         board.game.setCaptured(false);
-                    }
-                } else {
-                    computerTurn();
-                    board.repaint();
-                    board.getGame().setCurrentPlayer(board.getGame().getHuman());
-                    board.getGame().setOpponentPlayer(board.getGame().getComputer());
-                }
 
+                        if (board.game.endCheck() != null) {
+                            JOptionPane.showMessageDialog(board, board.game.endCheck() + " has won!");
+                        }
+                    }
+                }
             }
         });
     }
 
     public void enableHints() {
         if (this.game.getCurrentPlayer().getIsHuman()) {
-            Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
-            temp = this.game.minimax(temp, 2, true, -10000, 10000);
-            int ID = temp.firstPiece.getID();
-            int index = this.game.getHuman().findPieceIndexByID(ID);
-            int[] pos = this.game.getHuman().getPieces().get(index).getPosition();
-            Tile hintTile = this.grid[pos[0]][pos[1]];
-            hintTile.setIsHint(true);
-            this.game.setHintTile(hintTile);
-            this.repaint();
+            if (this.game.getHintTiles().isEmpty()) {
+                Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
+                temp = this.game.minimax(temp, 2, true, -10000, 10000);
+                int ID = temp.firstPiece.getID();
+                int index = this.game.getHuman().findPieceIndexByID(ID);
+                int[] pos = this.game.getHuman().getPieces().get(index).getPosition();
+                int[] lastPos = temp.firstPieceLastPos;
+                Tile hintTile = this.grid[pos[0]][pos[1]];
+                Tile lastHintTile = this.grid[lastPos[0]][lastPos[1]];
+                hintTile.setIsHint(true);
+                lastHintTile.setIsHint(true);
+                this.game.addHintTile(hintTile);
+                this.game.addHintTile(lastHintTile);
+                this.repaint();
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Hints are available when it's your turn.");
         }
     }
 
     public void computerTurn() {
-        Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
-        temp = this.game.minimax(temp, 2, true, -10000, 10000);
-        int ID = temp.firstPiece.getID();
-        Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
-        int[] moveTo = temp.firstPieceLastPos;
-        int[] moveFrom = movingPiece.getPosition();
 
-        movingPiece.setPosition(moveTo);
-        this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
-        this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
-        this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
-        this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
-        if (moveTo[0] == 0 || moveTo[0] == 7) {
-            movingPiece.setIsKing(true);
-        }
+        if (this.game.getCurrentPlayer().equals(this.game.getComputer())) {
+            Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
+            temp = this.game.minimax(temp, 2, true, -10000, 10000);
+            int ID = temp.firstPiece.getID();
+            Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
+            int[] moveTo = temp.firstPieceLastPos;
+            int[] moveFrom = movingPiece.getPosition();
 
-        if (!temp.firstTakenPieces.isEmpty()) {
-            for (Piece p : temp.firstTakenPieces) {
-                if (p.getIsKing()) {
-                    movingPiece.setIsKing(true);
-                }
-                this.game.getHuman().removeAPiece(p.getID());
-                int[] pos = p.getPosition();
-                this.grid[pos[0]][pos[1]].setOccupiedBy(null);
-                this.grid[pos[0]][pos[1]].setIsOccupied(false);
+            movingPiece.setPosition(moveTo);
+            this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
+            this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
+            this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
+            this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+            if (moveTo[0] == 0 || moveTo[0] == 7) {
+                movingPiece.setIsKing(true);
             }
+
+            if (!temp.firstTakenPieces.isEmpty()) {
+                for (Piece p : temp.firstTakenPieces) {
+                    if (p.getIsKing()) {
+                        movingPiece.setIsKing(true);
+                    }
+                    this.game.getHuman().removeAPiece(p.getID());
+                    int[] pos = p.getPosition();
+                    this.grid[pos[0]][pos[1]].setOccupiedBy(null);
+                    this.grid[pos[0]][pos[1]].setIsOccupied(false);
+                }
+            }
+
+            this.repaint();
+
+            if (this.game.endCheck() != null) {
+                JOptionPane.showMessageDialog(this, this.game.endCheck() + " has won!");
+            }
+
+            this.game.setCurrentPlayer(this.game.getHuman());
+            this.game.setOpponentPlayer(this.game.getComputer());
+        } else {
+            JOptionPane.showMessageDialog(this, "Please make your move first.");
         }
 
     }
 
     public void selectAPiece(Tile t, Board board) {
 
-        Player currentPlayer = board.getGame().getCurrentPlayer();
         // Check if there is a checker on the clicked tile.
         if (t.getIsOccupied() == true) {
             // Enable tiles on which only the pieces of the current player are put.
@@ -343,24 +354,35 @@ public class Board extends JPanel {
                 Board board = new Board(screenSize);
                 JFrame window = new JFrame();
                 int tileSize = board.tileSize;
-                window.setLayout(new FlowLayout(FlowLayout.CENTER));
+                window.setLayout(new FlowLayout(FlowLayout.CENTER, tileSize / 5, tileSize / 4));
                 JPanel ui = new JPanel();
                 JButton enableHints = new JButton("HINTS");
+                JButton proceed = new JButton("PROCEED");
                 enableHints.setBounds(tileSize, tileSize, tileSize, tileSize);
                 enableHints.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         board.enableHints();
                     }
                 });
+                proceed.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        board.computerTurn();
+                    }
+                });
+                JLabel text = new JLabel("Click 'PROCEED' after making your moves.");
+                text.setFont(new Font("Verdana", Font.BOLD, tileSize / 4));
                 ui.setLayout(new GridBagLayout());
                 GridBagConstraints c = new GridBagConstraints();
                 c.insets = new Insets(tileSize / 5, tileSize / 5, tileSize / 5, tileSize / 5);
                 c.gridx = 0;
                 c.gridy = 0;
                 ui.add(enableHints, c);
-                window.setSize(screenSize);
+                c.gridy = 1;
+                ui.add(proceed, c);
+                window.setSize(tileSize * 11, tileSize * 10);
                 window.add(board);
                 window.add(ui);
+                window.add(text);
                 window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 window.setVisible(true);
             }

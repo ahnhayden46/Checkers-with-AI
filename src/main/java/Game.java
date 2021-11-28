@@ -25,7 +25,7 @@ public class Game {
     private int difficulty = 0;
 
     private Tile currentTile = null;
-    private Tile hintTile = null;
+    private ArrayList<Tile> hintTiles = new ArrayList<>();
     private HashMap<Tile, Tile> candidates = null;
     private boolean forced = false;
     private boolean moved = false;
@@ -40,12 +40,12 @@ public class Game {
         this.setDifficulty();
     }
 
-    public Tile getHintTile() {
-        return hintTile;
+    public ArrayList<Tile> getHintTiles() {
+        return hintTiles;
     }
 
-    public void setHintTile(Tile hintTile) {
-        this.hintTile = hintTile;
+    public void addHintTile(Tile hintTile) {
+        this.hintTiles.add(hintTile);
     }
 
     public Tile getCurrentTile() {
@@ -187,42 +187,6 @@ public class Game {
             } else {
                 forward = 1;
             }
-
-            // ArrayList<int[][]> targetAndOppositePos = new ArrayList<>();
-            // // Nested int array consists of the {x, y} coordinates of the target tile and
-            // // one over it.
-            // int[][] pos1 = { { position[0] + forward, position[1] + 1 },
-            // { position[0] + (2 * forward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos1);
-            // int[][] pos2 = { { position[0] + forward, position[1] - 1 },
-            // { position[0] + (2 * forward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos2);
-
-            // // If the occupying piece is a king, calculate backward direction too.
-            // if (current.getOccupiedBy().getIsKing()) {
-            // if (current.getOccupiedBy().getIsWhite()) {
-            // backward = 1;
-            // } else {
-            // backward = -1;
-            // }
-            // int[][] pos3 = { { position[0] + backward, position[1] + 1 },
-            // { position[0] + (2 * backward), position[1] + 2 } };
-            // targetAndOppositePos.add(pos3);
-            // int[][] pos4 = { { position[0] + backward, position[1] - 1 },
-            // { position[0] + (2 * backward), position[1] - 2 } };
-            // targetAndOppositePos.add(pos4);
-            // }
-
-            // for (int[][] pos : targetAndOppositePos) {
-            // if(pos)
-            // if (t.getIsOccupied()) {
-            // if (this.isOccupiedByOpponent(current, t)) {
-
-            // }
-            // }
-            // }
-            // Append to the candidates array the forward diagonal tiles first.
-            // In case it is facing the end of the board, use try{}.
             try {
                 Tile t = grid[position[0] + forward][position[1] + 1];
                 if (t.getIsOccupied() == true) {
@@ -416,11 +380,10 @@ public class Game {
             int[] movingPiecePos = newTemp.movingPiece.getPosition();
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
-            System.out.println(candPos[0] + " " + candPos[1] + "    " + takenPos[0] + " " + takenPos[1]);
             newTemp.movingPiece.setPosition(candPos);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
-            newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
+            newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(newTemp.movingPiece);
             newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
 
             if (candPos[0] == 0 || candPos[0] == 7) {
@@ -429,10 +392,14 @@ public class Game {
 
             Piece takenPiece = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy();
 
-            if (takenPiece.getIsWhite()) {
+            try {
                 newTemp.humanPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.humanPieces));
-            } else {
-                newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.computerPieces));
+            } catch (Exception e) {
+            }
+
+            try {
+                newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.humanPieces));
+            } catch (Exception e) {
             }
 
             if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
@@ -462,7 +429,6 @@ public class Game {
 
     public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
         int[] movingPiecePos = temp.movingPiece.getPosition();
-        System.out.println(movingPiecePos[0]);
         HashMap<Tile, Tile> cands = temp.calculateCandidates(temp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
 
         if (!cands.isEmpty()) {
@@ -470,13 +436,13 @@ public class Game {
             if (depth == 2) {
                 newTemp.firstPiece = new Piece(p);
             }
-            if (!temp.forced) {
+            if (!newTemp.forced) {
                 for (Tile t : cands.keySet()) {
                     int[] candPos = t.getPosition();
                     newTemp.movingPiece.setPosition(candPos);
                     newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
                     newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
-                    newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(temp.movingPiece);
+                    newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(newTemp.movingPiece);
                     newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
                     if (candPos[0] == 0 || candPos[0] == 7) {
                         newTemp.movingPiece.setIsKing(true);
