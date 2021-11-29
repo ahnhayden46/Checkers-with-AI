@@ -84,93 +84,65 @@ public class Game {
 
         // Check if the given tile is occupied by any piece.
         if (current.getIsOccupied() == true) {
+            HashMap<int[], int[]> positions = new HashMap<>();
             int forward = 0;
-            // int backward = 0;
+            int backward;
             int[] position = current.getPosition();
-            // If it is occupied, check whether it is a human player's or a computer
-            // player's.
+
+            // Check whether it is a human player's or a computer player's.
             if (current.getOccupiedBy().getIsWhite()) {
                 // Set the right forward direction accordingly.
                 forward = -1;
             } else {
                 forward = 1;
             }
-            try {
-                Tile t = grid[position[0] + forward][position[1] + 1];
-                if (t.getIsOccupied() == true) {
-                    if (isOccupiedByOpponent(current, t)) {
-                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] + 1 };
-                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
-                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                            if (!oppositeTile.getIsOccupied()) {
-                                forcedCandidates.put(oppositeTile, t);
-                            }
-                        }
-                    }
-                } else {
-                    candidates.put(t, null);
-                }
-            } catch (Exception e) {
-            }
-            try {
-                Tile t = grid[position[0] + forward][position[1] - 1];
-                if (t.getIsOccupied() == true) {
-                    if (isOccupiedByOpponent(current, t)) {
-                        int[] oppositePos = { t.getPosition()[0] + forward, t.getPosition()[1] - 1 };
-                        if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0 && oppositePos[1] < 8) {
-                            Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                            if (!oppositeTile.getIsOccupied()) {
-                                forcedCandidates.put(oppositeTile, t);
-                            }
-                        }
-                    }
-                } else {
-                    candidates.put(t, null);
-                }
-            } catch (Exception e) {
-            }
 
-            // If the piece is a king, calculate backward candidates too.
+            int[] candidatePos1 = { position[0] + forward, position[1] + 1 };
+            int[] oppositePos1 = { candidatePos1[0] + forward, candidatePos1[1] + 1 };
+            positions.put(candidatePos1, oppositePos1);
+            int[] candidatePos2 = { position[0] + forward, position[1] - 1 };
+            int[] oppositePos2 = { candidatePos2[0] + forward, candidatePos2[1] - 1 };
+            positions.put(candidatePos2, oppositePos2);
+
+            // If the piece is a king, calculate backward diagonal candidates too.
             if (current.getOccupiedBy().getIsKing()) {
-                int backward;
                 if (current.getOccupiedBy().getIsWhite()) {
                     // Set the right forward direction accordingly.
                     backward = 1;
                 } else {
                     backward = -1;
                 }
+                int[] candidatePos3 = { position[0] + backward, position[1] + 1 };
+                int[] oppositePos3 = { candidatePos3[0] + backward, candidatePos3[1] + 1 };
+                positions.put(candidatePos3, oppositePos3);
+                int[] candidatePos4 = { position[0] + backward, position[1] - 1 };
+                int[] oppositePos4 = { candidatePos4[0] + backward, candidatePos4[1] - 1 };
+                positions.put(candidatePos4, oppositePos4);
+            }
 
+            for (int[] pos : positions.keySet()) {
                 try {
-                    Tile t = grid[position[0] + backward][position[1] + 1];
+                    Tile t = grid[pos[0]][pos[1]];
+                    // Check if the tile is occupied.
                     if (t.getIsOccupied() == true) {
-                        if (isOccupiedByOpponent(current, t)) {
-                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] + 1 };
+                        // If it is, check if it's occupied by an opponent piece.
+                        if (Game.isOccupiedByOpponent(current, t)) {
+                            int[] oppositePos = positions.get(pos);
+                            // Make sure the tile position is not pointing outside the grid.
                             if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
                                     && oppositePos[1] < 8) {
                                 Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
+                                // If it is, check if the tile beyond the occupied tile is empty so the moving
+                                // piece can proceed to it.
                                 if (!oppositeTile.getIsOccupied()) {
+                                    // Add the tile to the forced candidates hashmap which contains the tile that
+                                    // the piece should be placed on and the tile that it jumped over.
                                     forcedCandidates.put(oppositeTile, t);
                                 }
                             }
                         }
-                    } else {
-                        candidates.put(t, null);
-                    }
-                } catch (Exception e) {
-                }
-                try {
-                    Tile t = grid[position[0] + backward][position[1] - 1];
-                    if (t.getIsOccupied() == true) {
-                        if (isOccupiedByOpponent(current, t)) {
-                            int[] oppositePos = { t.getPosition()[0] + backward, t.getPosition()[1] - 1 };
-                            if (oppositePos[0] >= 0 && oppositePos[0] < 8 && oppositePos[1] >= 0
-                                    && oppositePos[1] < 8) {
-                                Tile oppositeTile = grid[oppositePos[0]][oppositePos[1]];
-                                if (!oppositeTile.getIsOccupied()) {
-                                    forcedCandidates.put(oppositeTile, t);
-                                }
-                            }
-                        }
+                        // If the tile is empty, just add it as a key to the candidate hashmap with a
+                        // 'null' value.
                     } else {
                         candidates.put(t, null);
                     }
@@ -179,10 +151,15 @@ public class Game {
             }
         }
 
+        // If any forced candidate tile was given, return the forced candidates hashmap
+        // and set the current temp object's 'forced' value to true so further
+        // algorithms can decide appropriate actions.
         if (!forcedCandidates.isEmpty()) {
             this.forced = true;
             return forcedCandidates;
         }
+
+        // Otherwise, return the normal candidates hashmap.
         this.forced = false;
         return candidates;
     }

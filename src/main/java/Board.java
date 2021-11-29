@@ -77,6 +77,22 @@ public class Board extends JPanel {
             y++;
         }
     }
+    
+    // Places the checkers of the human and computer on the grid, i.e., game board.
+    public void placeInitialCheckers() {
+        // Place the human player's pieces
+        for (Piece p : this.game.getHuman().getPieces()) {
+            Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
+            t.setOccupiedBy(p);
+            t.setIsOccupied(true);
+        }
+        // Place the computer's pieces
+        for (Piece p : this.game.getComputer().getPieces()) {
+            Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
+            t.setOccupiedBy(p);
+            t.setIsOccupied(true);
+        }
+    }
 
     // A method for setting a hint tile outside this class.
     public void setHintTileInGrid(int[] pos, boolean isHint) {
@@ -204,20 +220,21 @@ public class Board extends JPanel {
             this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
             this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
 
-            // Check if the moving piece has reached the king's row and decide whether to
-            // make it a king or not.
-            if (moveTo[0] == 0 || moveTo[0] == 7) {
-                movingPiece.setIsKing(true);
-            }
+            movingPiece.setIsKing(temp.firstPiece.getIsKing());
+            // // Check if the moving piece has reached the king's row and decide whether to
+            // // make it a king or not.
+            // if (moveTo[0] == 0 || moveTo[0] == 7) {
+            //     movingPiece.setIsKing(true);
+            // }
 
             // If any piece should be taken due to the move
             if (!temp.firstTakenPieces.isEmpty()) {
                 // For each piece taken,
                 for (Piece p : temp.firstTakenPieces) {
-                    // Check the validity for regicide
-                    if (p.getIsKing()) {
-                        movingPiece.setIsKing(true);
-                    }
+                    // // Check the validity for regicide
+                    // if (p.getIsKing()) {
+                    //     movingPiece.setIsKing(true);
+                    // }
                     // Remove the piece from the human player's pieces list and the grid.
                     this.game.getHuman().removeAPiece(p.getID());
                     int[] pos = p.getPosition();
@@ -289,23 +306,6 @@ public class Board extends JPanel {
                 board.moveAPiece(board.game.getCurrentTile().getOccupiedBy(), t);
             }
         }
-    }
-
-    // Places the checkers of the human and computer on the grid, i.e., game board.
-    public void placeInitialCheckers() {
-        // Place the human player's pieces
-        for (Piece p : this.game.getHuman().getPieces()) {
-            Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
-            t.setOccupiedBy(p);
-            t.setIsOccupied(true);
-        }
-        // Place the computer's pieces
-        for (Piece p : this.game.getComputer().getPieces()) {
-            Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
-            t.setOccupiedBy(p);
-            t.setIsOccupied(true);
-        }
-
     }
 
     // Moves the given piece to the given tile
