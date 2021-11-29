@@ -147,78 +147,106 @@ public class Board extends JPanel {
         });
     }
 
+    // Shows the rules when clicked
+    public void showRules() {
+        JOptionPane.showMessageDialog(this,
+                "Each checker can make a diagonal move forward from one square to an adjacent sqaure. \nWhen it reaches at the end of the row, it becomes a king and can move backward too. \nCapturing moves occur when a player jumps an opposing piece and the square behind is unoccupied by another piece. \nWhen the requirement is met, the capturing must be made and several jumps can be made in one turn.");
+    }
+
     // A method that uses the minimax algorithm for the human player and shows
     // hints.
     public void enableHints() {
         if (this.game.getCurrentPlayer().getIsHuman()) {
             // Calculate hints only when they were not calculated before.
             if (this.game.getHintTiles().isEmpty()) {
-                // Perform the minimax algorithm by giving the current computer pieces as human
-                // pieces and vice versa to make the algorithm work for the human player.
+                // Perform the minimax algorithm for the human player by giving the current
+                // computer pieces as human
+                // pieces and vice versa.
                 Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
                 temp = this.game.minimax(temp, 2, true, -10000, 10000);
+                // Retrieve the information of the node (a temp object) that has the highest
+                // heuristic score calculated by the minimax.
                 int ID = temp.firstPiece.getID();
                 int index = this.game.getHuman().findPieceIndexByID(ID);
                 int[] pos = this.game.getHuman().getPieces().get(index).getPosition();
                 int[] lastPos = temp.firstPieceLastPos;
                 Tile hintTile = this.grid[pos[0]][pos[1]];
                 Tile lastHintTile = this.grid[lastPos[0]][lastPos[1]];
+                // Update the hint tiles
                 hintTile.setIsHint(true);
                 lastHintTile.setIsHint(true);
                 this.game.addHintTile(hintTile);
                 this.game.addHintTile(lastHintTile);
                 this.repaint();
             }
+            // Triggered when the user tries to enable hints when it's a computer's turn.
         } else {
             JOptionPane.showMessageDialog(this, "Hints are available when it's your turn.");
         }
     }
 
+    // A method that gets called when the computer player takes turn.
+    // Performs the minimax and then move a piece and update the current grid
+    // depending on the result.
     public void computerTurn() {
-
+        // Only triggered when it's computer's turn.
         if (this.game.getCurrentPlayer().equals(this.game.getComputer())) {
+            // Perform minimax and get the result.
             Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
             temp = this.game.minimax(temp, 2, true, -10000, 10000);
             int ID = temp.firstPiece.getID();
             Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
             int[] moveTo = temp.firstPieceLastPos;
             int[] moveFrom = movingPiece.getPosition();
-
             movingPiece.setPosition(moveTo);
             this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
             this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
             this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
             this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+
+            // Check if the moving piece has reached the king's row and decide whether to
+            // make it a king or not.
             if (moveTo[0] == 0 || moveTo[0] == 7) {
                 movingPiece.setIsKing(true);
             }
 
+            // If any piece should be taken due to the move
             if (!temp.firstTakenPieces.isEmpty()) {
+                // For each piece taken,
                 for (Piece p : temp.firstTakenPieces) {
+                    // Check the validity for regicide
                     if (p.getIsKing()) {
                         movingPiece.setIsKing(true);
                     }
+                    // Remove the piece from the human player's pieces list and the grid.
                     this.game.getHuman().removeAPiece(p.getID());
                     int[] pos = p.getPosition();
                     this.grid[pos[0]][pos[1]].setOccupiedBy(null);
                     this.grid[pos[0]][pos[1]].setIsOccupied(false);
                 }
             }
-
             this.repaint();
 
+            // Check if the game has been over
             if (this.game.endCheck() != null) {
                 JOptionPane.showMessageDialog(this, this.game.endCheck() + " has won!");
             }
 
+            // Switch the current player
             this.game.setCurrentPlayer(this.game.getHuman());
             this.game.setOpponentPlayer(this.game.getComputer());
+
+            // If the method gets called when it's not the computer's turn, show an error
+            // message.
         } else {
             JOptionPane.showMessageDialog(this, "Please make your move first.");
         }
 
     }
 
+    // A method that selects a piece when it's a player's turn.
+    // Decides which action to perform (e.g., choose the tile as a current tile)
+    // depending on the current state
     public void selectAPiece(Tile t, Board board) {
 
         // Check if there is a checker on the clicked tile.
@@ -230,7 +258,7 @@ public class Board extends JPanel {
                 if (t.getIsCandidate() == false) {
                     // Check if there is already a current tile assigned.
                     if (board.game.getCurrentTile() != null) {
-                        board.resetCurrentCandidate();
+                        board.game.resetCurrentCandidate();
                         board.game.getCurrentTile().setIsCurrent(false);
                     }
                     // Set the tile as the current tile.
@@ -242,16 +270,20 @@ public class Board extends JPanel {
                     // Change the candidate tiles' property.
 
                 }
+
+                // If the selected tile is a candidate, move the current tile's piece to it.
             } else {
                 if (t.getIsCandidate()) {
                     board.moveAPiece(board.game.getCurrentTile().getOccupiedBy(), t);
+
+                    // When the user tries to click on a piece that doesn't belong to them, show the
+                    // error message.
                 } else {
                     JOptionPane.showMessageDialog(board, "Please select among your pieces.");
                 }
             }
         } // If the tile is not occupied and is a candidate, move the piece from the
-          // current tile to this
-          // tile.
+          // current tile to this tile.
         else {
             if (t.getIsCandidate()) {
                 board.moveAPiece(board.game.getCurrentTile().getOccupiedBy(), t);
@@ -259,12 +291,15 @@ public class Board extends JPanel {
         }
     }
 
+    // Places the checkers of the human and computer on the grid, i.e., game board.
     public void placeInitialCheckers() {
+        // Place the human player's pieces
         for (Piece p : this.game.getHuman().getPieces()) {
             Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
             t.setOccupiedBy(p);
             t.setIsOccupied(true);
         }
+        // Place the computer's pieces
         for (Piece p : this.game.getComputer().getPieces()) {
             Tile t = this.grid[p.getPosition()[0]][p.getPosition()[1]];
             t.setOccupiedBy(p);
@@ -273,6 +308,7 @@ public class Board extends JPanel {
 
     }
 
+    // Moves the given piece to the given tile
     public void moveAPiece(Piece p, Tile t) {
         // Vacate the tile from which the piece moved
         int[] currentPos = p.getPosition();
@@ -292,7 +328,8 @@ public class Board extends JPanel {
             this.getOpponentPiece(p, t);
         }
 
-        this.resetCurrentCandidate();
+        // Reset the current and candidate tile instances of
+        this.game.resetCurrentCandidate();
 
         if (t.getIsEnd()) {
             p.setIsKing(true);
@@ -300,42 +337,40 @@ public class Board extends JPanel {
         this.game.setMoved(true);
     }
 
+    // The given piece gets rid of the opponent piece on the given tile.
     public void getOpponentPiece(Piece p, Tile t) {
+        // Change the state of the game
         this.game.setCaptured(true);
         int[] pos = { this.game.getCandidates().get(t).getPosition()[0],
                 this.game.getCandidates().get(t).getPosition()[1] };
         Piece taken = this.grid[pos[0]][pos[1]].getOccupiedBy();
         int takenID = taken.getID();
+        // Remove the piece from the grid and update the grid
         this.game.getOpponentPlayer().removeAPiece(takenID);
         this.grid[pos[0]][pos[1]].setIsOccupied(false);
         this.grid[pos[0]][pos[1]].setOccupiedBy(null);
+        // If the taken piece is a king, make the taking piece a king (regicide)
         if (taken.getIsKing()) {
             this.game.setKingCaptured(true);
             p.setIsKing(true);
         }
     }
 
-    public void resetCurrentCandidate() {
-        this.game.getCurrentTile().setIsCurrent(false);
-        for (Tile t : this.game.getCandidates().keySet()) {
-            t.setIsCandidate(false);
-        }
-        this.game.setCurrentTile(null);
-        this.game.setCandidates(null);
-    }
-
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
+                // Set up a JFrame to contain all the elements
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 Board board = new Board(screenSize);
                 JFrame window = new JFrame();
                 int tileSize = board.tileSize;
                 window.setLayout(new FlowLayout(FlowLayout.CENTER, tileSize / 5, tileSize / 4));
+                // UI elements
                 JPanel ui = new JPanel();
                 JButton enableHints = new JButton("HINTS");
                 JButton proceed = new JButton("PROCEED");
+                JButton rules = new JButton("RULES");
                 enableHints.setBounds(tileSize, tileSize, tileSize, tileSize);
                 enableHints.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -347,9 +382,16 @@ public class Board extends JPanel {
                         board.computerTurn();
                     }
                 });
+                rules.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        board.showRules();
+                    }
+                });
                 JLabel text = new JLabel("Click 'PROCEED' after making your moves.");
                 text.setFont(new Font("Verdana", Font.BOLD, tileSize / 4));
                 ui.setLayout(new GridBagLayout());
+
+                // Layout elements
                 GridBagConstraints c = new GridBagConstraints();
                 c.insets = new Insets(tileSize / 5, tileSize / 5, tileSize / 5, tileSize / 5);
                 c.gridx = 0;
@@ -357,6 +399,10 @@ public class Board extends JPanel {
                 ui.add(enableHints, c);
                 c.gridy = 1;
                 ui.add(proceed, c);
+                c.gridy = 2;
+                ui.add(rules, c);
+
+                // Add them all and show
                 window.setSize(tileSize * 11, tileSize * 10);
                 window.add(board);
                 window.add(ui);

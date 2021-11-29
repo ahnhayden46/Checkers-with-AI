@@ -304,6 +304,61 @@ public class Game {
         }
     }
 
+    // A method to calculate all possible moves of the piece given.
+    public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
+
+        // Get the position of the given piece and calculate candidate tiles from it.
+        int[] movingPiecePos = temp.movingPiece.getPosition();
+        HashMap<Tile, Tile> cands = temp.calculateCandidates(temp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
+
+        // If there is any candidate tile available from the current position
+        if (!cands.isEmpty()) {
+            // Create a new temp object and copy the given temp to expand a new node.
+            Temp newTemp = new Temp(temp);
+            // If it's the first recursion, assign the first moving piece as the given
+            // piece.
+            if (depth == 2) {
+                newTemp.firstPiece = new Piece(p);
+            }
+            // If there's no force capture available
+            if (!newTemp.forced) {
+                // For each candidate tile,
+                for (Tile t : cands.keySet()) {
+                    // Create another temp object to save each candidate tile.
+                    newTemp = new Temp(newTemp);
+                    // Get the position of the candidate tile and move the piece to it and update
+                    // the grid.
+                    int[] candPos = t.getPosition();
+                    newTemp.movingPiece.setPosition(candPos);
+                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
+                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
+                    newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(newTemp.movingPiece);
+                    newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
+                    // Check if it has reached the king's row.
+                    if (candPos[0] == 0 || candPos[0] == 7) {
+                        newTemp.movingPiece.setIsKing(true);
+                    }
+                    // Calculate the heuristic score of the current state.
+                    newTemp.heuristicScore = heuristic(newTemp);
+                    // If it's the first move of the first recursion, update the first piece's
+                    // information in the temp object.
+                    if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+                        newTemp.firstPieceLastPos = candPos;
+                        newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
+                    }
+                    temps.add(newTemp);
+                }
+                return temps;
+
+                // If the candidate tiles have any forced capture, perform the method to
+                // expand nodes further.
+            } else {
+                temps = getPieceForcedMove(newTemp, cands, temps, depth);
+            }
+        }
+        return temps;
+    }
+
     // Returns an arraylist with possible states with forced capturing moves.
     // A recursive method that stops when there's not any forced capture
     // possibleanymore.
@@ -326,43 +381,57 @@ public class Game {
         for (Tile t : cands.keySet()) {
             // Create a new temp object and retrieve the current information.
             Temp newTemp = new Temp(temp);
-            // Get the position of the current piece, its candidate, and the tile it should
+            // Get the positions of the current piece, its candidate, and the tile it should
             // jump over.
             int[] movingPiecePos = newTemp.movingPiece.getPosition();
             int[] candPos = t.getPosition();
             int[] takenPos = cands.get(t).getPosition();
+            // Update the position of the current piece and the grid.
             newTemp.movingPiece.setPosition(candPos);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
             newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
             newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(newTemp.movingPiece);
             newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
 
+            // Check if it has reached the king's row
             if (candPos[0] == 0 || candPos[0] == 7) {
+                // If it has, make it a king.
                 newTemp.movingPiece.setIsKing(true);
             }
 
+            // Update the taken piece's information and the tile on the grid which it was
+            // on.
             Piece takenPiece = newTemp.tempGrid[takenPos[0]][takenPos[1]].getOccupiedBy();
 
+            // Remove the piece from the temp object's pieces list.
+            // Use try to avoid complicated if statements (it still works since the human
+            // and computer have pieces with unique IDs).
             try {
                 newTemp.humanPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.humanPieces));
             } catch (Exception e) {
             }
-
             try {
                 newTemp.computerPieces.remove(newTemp.findPieceIndexByID(takenPiece.getID(), newTemp.humanPieces));
             } catch (Exception e) {
             }
 
+            // If it's the first move of the first piece, remember the taken piece to update
+            // on the real grid.
             if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                 newTemp.firstTakenPieces.add(new Piece(takenPiece));
             }
 
+            // Update the grid in the current temp object.
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setOccupiedBy(null);
             newTemp.tempGrid[takenPos[0]][takenPos[1]].setIsOccupied(false);
 
+            // If the taken piece is a king, perform regicide and cease further moving.
             if (takenPiece.getIsKing()) {
                 newTemp.movingPiece.setIsKing(true);
                 newTemp.heuristicScore = heuristic(temp);
+
+                // If it's the first move of the first piece, update the first taken piece's
+                // information.
                 if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                     newTemp.firstPieceLastPos = newTemp.movingPiece.getPosition();
                     newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
@@ -371,47 +440,22 @@ public class Game {
                 continue;
             }
 
+            // Recursion call to calculate candiates until it has no forced capture
+            // available.
             HashMap<Tile, Tile> newCands = newTemp.calculateCandidates(newTemp.tempGrid[candPos[0]][candPos[1]]);
-
             temps = getPieceForcedMove(newTemp, newCands, temps, depth);
         }
         return temps;
     }
 
-    public ArrayList<Temp> getPieceAllMoves(Temp temp, Piece p, ArrayList<Temp> temps, int depth) {
-        int[] movingPiecePos = temp.movingPiece.getPosition();
-        HashMap<Tile, Tile> cands = temp.calculateCandidates(temp.tempGrid[movingPiecePos[0]][movingPiecePos[1]]);
-
-        if (!cands.isEmpty()) {
-            Temp newTemp = new Temp(temp);
-            if (depth == 2) {
-                newTemp.firstPiece = new Piece(p);
-            }
-            if (!newTemp.forced) {
-                for (Tile t : cands.keySet()) {
-                    int[] candPos = t.getPosition();
-                    newTemp.movingPiece.setPosition(candPos);
-                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setOccupiedBy(null);
-                    newTemp.tempGrid[movingPiecePos[0]][movingPiecePos[1]].setIsOccupied(false);
-                    newTemp.tempGrid[candPos[0]][candPos[1]].setOccupiedBy(newTemp.movingPiece);
-                    newTemp.tempGrid[candPos[0]][candPos[1]].setIsOccupied(true);
-                    if (candPos[0] == 0 || candPos[0] == 7) {
-                        newTemp.movingPiece.setIsKing(true);
-                    }
-                    newTemp.heuristicScore = heuristic(newTemp);
-                    if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
-                        newTemp.firstPieceLastPos = candPos;
-                        newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
-                    }
-                    temps.add(newTemp);
-                }
-                return temps;
-
-            } else {
-                temps = getPieceForcedMove(newTemp, cands, temps, depth);
-            }
+    // Resets the current and candidate tile instances in the object.
+    public void resetCurrentCandidate() {
+        this.currentTile.setIsCurrent(false);
+        for (Tile t : this.candidates.keySet()) {
+            t.setIsCandidate(false);
         }
-        return temps;
+        this.currentTile = null;
+        this.candidates = null;
     }
 
     // Getters and setters from here.
