@@ -79,12 +79,13 @@ public class Game {
     // if it has to.
     public HashMap<Tile, Tile> calculateCandidates(Tile[][] grid, Tile current) {
 
-        HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>();
-        HashMap<Tile, Tile> forcedCandidates = new HashMap<Tile, Tile>();
+        HashMap<Tile, Tile> candidates = new HashMap<Tile, Tile>(); // For normal moves
+        HashMap<Tile, Tile> forcedCandidates = new HashMap<Tile, Tile>(); // For forced capturing moves
 
         // Check if the given tile is occupied by any piece.
         if (current.getIsOccupied() == true) {
-            HashMap<int[], int[]> positions = new HashMap<>();
+            HashMap<int[], int[]> positions = new HashMap<>(); // <The position of an adjacent tile, the position of the
+                                                               // tile beyond the adjacent one>
             int forward = 0;
             int backward;
             int[] position = current.getPosition();

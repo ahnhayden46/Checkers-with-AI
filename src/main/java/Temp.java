@@ -118,7 +118,8 @@ public class Temp {
 
         // Check if the given tile is occupied by any piece.
         if (current.getIsOccupied() == true) {
-            HashMap<int[], int[]> positions = new HashMap<>();
+            HashMap<int[], int[]> positions = new HashMap<>(); // <The position of an adjacent tile, the position of the
+                                                               // tile beyond the adjacent one>
             int forward = 0;
             int backward;
             int[] position = current.getPosition();
