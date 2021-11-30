@@ -247,7 +247,6 @@ public class Board extends JPanel {
             Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
             // Calculate the best move using the minimax
             temp = this.game.minimax(temp, 2, true, -10000, 10000);
-            
             // If the temp object doesn't have the firstPiece variable, it means there's no
             // possible move.
             if (temp.firstPiece != null) {
@@ -290,10 +289,12 @@ public class Board extends JPanel {
                 // If the method gets called when it's not the computer's turn, show an error
                 // message.
             }
+            else {
+                JOptionPane.showMessageDialog(this, "There is no available move for the Computer, you won!");
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Please make your move first.");
         }
-
     }
 
     // A method that selects a piece when it's a player's turn.

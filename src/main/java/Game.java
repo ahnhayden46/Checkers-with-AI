@@ -199,7 +199,7 @@ public class Game {
     // exploring the minimax algorithm and the number of king pieces of the
     // computer.
     public int heuristic2(Temp temp) {
-        return (temp.computerPieces.size() - temp.humanPieces.size()) + temp.numberOfComputerKings() * 2;
+        return (temp.computerPieces.size() - temp.humanPieces.size());
     }
 
     // The heuristic for hard mode,
@@ -520,7 +520,7 @@ public class Game {
         this.forcedCandidates = forcedCandidates;
     }
 
-    public void addForcedCandidates(Tile t){
+    public void addForcedCandidates(Tile t) {
         this.forcedCandidates.add(t);
     }
 
