@@ -296,7 +296,7 @@ public class Game {
             Temp newTemp = new Temp(temp);
             // If it's the first recursion, assign the first moving piece as the given
             // piece.
-            if (depth == 2) {
+            if (depth == 3) {
                 newTemp.firstPiece = new Piece(p);
             }
             // If there's no force capture available
@@ -321,7 +321,7 @@ public class Game {
                     newTemp.heuristicScore = heuristic(newTemp);
                     // If it's the first move of the first recursion, update the first piece's
                     // information in the temp object.
-                    if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+                    if (depth == 3 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                         newTemp.firstPieceLastPos = candPos;
                         newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
                     }
@@ -347,7 +347,7 @@ public class Game {
             // Evaluate the state
             temp.heuristicScore = heuristic(temp);
             // When it's calculating the first move of the firstly selected piece,
-            if (depth == 2 && temp.firstPiece.getID() == temp.movingPiece.getID()) {
+            if (depth == 3 && temp.firstPiece.getID() == temp.movingPiece.getID()) {
                 // Update the information of the first piece.
                 temp.firstPieceLastPos = temp.movingPiece.getPosition();
                 temp.firstPiece.setIsKing(temp.movingPiece.getIsKing());
@@ -396,7 +396,7 @@ public class Game {
 
             // If it's the first move of the first piece, remember the taken piece to update
             // on the real grid.
-            if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+            if (depth == 3 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                 newTemp.firstTakenPieces.add(new Piece(takenPiece));
             }
 
@@ -411,7 +411,7 @@ public class Game {
 
                 // If it's the first move of the first piece, update the first taken piece's
                 // information.
-                if (depth == 2 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
+                if (depth == 3 && newTemp.firstPiece.getID() == newTemp.movingPiece.getID()) {
                     newTemp.firstPieceLastPos = newTemp.movingPiece.getPosition();
                     newTemp.firstPiece.setIsKing(newTemp.movingPiece.getIsKing());
                 }

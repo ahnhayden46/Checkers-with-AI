@@ -215,7 +215,7 @@ public class Board extends JPanel {
                 // computer pieces as human
                 // pieces and vice versa.
                 Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
-                temp = this.game.minimax(temp, 2, true, -10000, 10000);
+                temp = this.game.minimax(temp, 3, true, -10000, 10000);
                 // Retrieve the information of the node (a temp object) that has the highest
                 // heuristic score calculated by the minimax.
                 int ID = temp.firstPiece.getID();
@@ -246,7 +246,7 @@ public class Board extends JPanel {
             // Perform minimax and get the result.
             Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
             // Calculate the best move using the minimax
-            temp = this.game.minimax(temp, 2, true, -10000, 10000);
+            temp = this.game.minimax(temp, 3, true, -10000, 10000);
             // If the temp object doesn't have the firstPiece variable, it means there's no
             // possible move.
             if (temp.firstPiece != null) {
