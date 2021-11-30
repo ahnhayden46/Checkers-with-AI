@@ -155,6 +155,10 @@ public class Board extends JPanel {
                         }
                         // If the piece didn't capture anything but only moved, switch the player turn.
                         else {
+                            for (Tile t : board.game.getForcedCandidates()) {
+                                t.setIsForcedCandidate(false);
+                            }
+                            board.game.getForcedCandidates().clear();
                             board.getGame().setCurrentPlayer(board.getGame().getComputer());
                             board.getGame().setOpponentPlayer(board.getGame().getHuman());
                         }
@@ -241,53 +245,51 @@ public class Board extends JPanel {
         if (this.game.getCurrentPlayer().equals(this.game.getComputer())) {
             // Perform minimax and get the result.
             Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
+            // Calculate the best move using the minimax
             temp = this.game.minimax(temp, 2, true, -10000, 10000);
-            int ID = temp.firstPiece.getID();
-            Piece movingPiece = this.game.getComputer().getPieces().get(this.game.getComputer().findPieceIndexByID(ID));
-            int[] moveTo = temp.firstPieceLastPos;
-            int[] moveFrom = movingPiece.getPosition();
-            movingPiece.setPosition(moveTo);
-            this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
-            this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
-            this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
-            this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+            
+            // If the temp object doesn't have the firstPiece variable, it means there's no
+            // possible move.
+            if (temp.firstPiece != null) {
+                // Update the best move on the real grid
+                int ID = temp.firstPiece.getID();
+                Piece movingPiece = this.game.getComputer().getPieces()
+                        .get(this.game.getComputer().findPieceIndexByID(ID));
+                int[] moveTo = temp.firstPieceLastPos;
+                int[] moveFrom = movingPiece.getPosition();
+                movingPiece.setPosition(moveTo);
+                this.grid[moveTo[0]][moveTo[1]].setIsOccupied(true);
+                this.grid[moveTo[0]][moveTo[1]].setOccupiedBy(movingPiece);
+                this.grid[moveFrom[0]][moveFrom[1]].setIsOccupied(false);
+                this.grid[moveFrom[0]][moveFrom[1]].setOccupiedBy(null);
+                movingPiece.setIsKing(temp.firstPiece.getIsKing());
 
-            movingPiece.setIsKing(temp.firstPiece.getIsKing());
-            // // Check if the moving piece has reached the king's row and decide whether to
-            // // make it a king or not.
-            // if (moveTo[0] == 0 || moveTo[0] == 7) {
-            // movingPiece.setIsKing(true);
-            // }
-
-            // If any piece should be taken due to the move
-            if (!temp.firstTakenPieces.isEmpty()) {
-                // For each piece taken,
-                for (Piece p : temp.firstTakenPieces) {
-                    // // Check the validity for regicide
-                    // if (p.getIsKing()) {
-                    // movingPiece.setIsKing(true);
-                    // }
-                    // Remove the piece from the human player's pieces list and the grid.
-                    this.game.getHuman().removeAPiece(p.getID());
-                    int[] pos = p.getPosition();
-                    this.grid[pos[0]][pos[1]].setOccupiedBy(null);
-                    this.grid[pos[0]][pos[1]].setIsOccupied(false);
+                // If any piece should be taken due to the move
+                if (!temp.firstTakenPieces.isEmpty()) {
+                    // For each piece taken,
+                    for (Piece p : temp.firstTakenPieces) {
+                        // Remove the piece from the human player's pieces list and the grid.
+                        this.game.getHuman().removeAPiece(p.getID());
+                        int[] pos = p.getPosition();
+                        this.grid[pos[0]][pos[1]].setOccupiedBy(null);
+                        this.grid[pos[0]][pos[1]].setIsOccupied(false);
+                    }
                 }
+                this.repaint();
+
+                // Check if the game has been over
+                if (this.game.endCheck() != null) {
+                    JOptionPane.showMessageDialog(this, this.game.endCheck() + " has won!");
+                }
+
+                // Switch the current player
+                this.game.setCurrentPlayer(this.game.getHuman());
+                this.game.setOpponentPlayer(this.game.getComputer());
+                this.forcedCapturingAvailable();
+
+                // If the method gets called when it's not the computer's turn, show an error
+                // message.
             }
-            this.repaint();
-
-            // Check if the game has been over
-            if (this.game.endCheck() != null) {
-                JOptionPane.showMessageDialog(this, this.game.endCheck() + " has won!");
-            }
-
-            // Switch the current player
-            this.game.setCurrentPlayer(this.game.getHuman());
-            this.game.setOpponentPlayer(this.game.getComputer());
-            this.forcedCapturingAvailable();
-
-            // If the method gets called when it's not the computer's turn, show an error
-            // message.
         } else {
             JOptionPane.showMessageDialog(this, "Please make your move first.");
         }
@@ -316,7 +318,6 @@ public class Board extends JPanel {
                     if (t.getIsForcedCandidate()) {
                         if (board.game.getCurrentTile() != null) {
                             board.game.resetTiles();
-                            board.game.getCurrentTile().setIsCurrent(false);
                         }
                         // Set the tile as the current tile.
                         board.game.setCurrentTile(t);
