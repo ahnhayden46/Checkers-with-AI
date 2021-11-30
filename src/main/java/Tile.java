@@ -27,6 +27,7 @@ public class Tile extends JPanel {
     private boolean isCurrent = false; // If the tile is selected.
     private boolean isCandidate = false; // If it is set as a candidate by the calculating candidates algorithm in the
                                          // Game class.
+    private boolean isForcedCandidate = false;
     private boolean isHint = false; // If it is set as a hint by the enabling hints algorithm in the Board class.
 
     // A constructor that copies another tile object.
@@ -62,6 +63,10 @@ public class Tile extends JPanel {
 
         // Painted light gray or black depending on its 'isLight' value.
         this.setBackground(this.isLight ? Color.LIGHT_GRAY : Color.BLACK);
+
+        if (this.isForcedCandidate) {
+            this.setBackground(Color.YELLOW);
+        }
 
         // If it is selected a current tile or a candidate or a hint.
         if (this.isCurrent) {
@@ -103,6 +108,15 @@ public class Tile extends JPanel {
     }
 
     // Getters and setters from here.
+
+    public boolean getIsForcedCandidate() {
+        return isForcedCandidate;
+    }
+
+    public void setIsForcedCandidate(boolean isForcedCandidate) {
+        this.isForcedCandidate = isForcedCandidate;
+    }
+
     public boolean getIsHint() {
         return isHint;
     }

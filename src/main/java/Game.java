@@ -35,6 +35,7 @@ public class Game {
     private boolean moved = false; // Indicates that any piece has moved to another tile.
     private boolean kingCaptured = false; // Indicates that a king has been captured.
     private boolean captured = false; // Indicates that any piece has been captured.
+    private ArrayList<Tile> forcedCandidates = new ArrayList<>();
 
     public Game() {
         this.human = new Human();
@@ -427,7 +428,7 @@ public class Game {
     }
 
     // Resets the current and candidate tile instances in the object.
-    public void resetCurrentCandidate() {
+    public void resetTiles() {
         this.currentTile.setIsCurrent(false);
         for (Tile t : this.candidates.keySet()) {
             t.setIsCandidate(false);
@@ -509,6 +510,18 @@ public class Game {
 
     public void setMoved(boolean moved) {
         this.moved = moved;
+    }
+
+    public ArrayList<Tile> getForcedCandidates() {
+        return forcedCandidates;
+    }
+
+    public void setForcedCandidates(ArrayList<Tile> forcedCandidates) {
+        this.forcedCandidates = forcedCandidates;
+    }
+
+    public void addForcedCandidates(Tile t){
+        this.forcedCandidates.add(t);
     }
 
     public boolean getCaptured() {

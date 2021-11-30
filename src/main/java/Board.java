@@ -77,7 +77,7 @@ public class Board extends JPanel {
             y++;
         }
     }
-    
+
     // Places the checkers of the human and computer on the grid, i.e., game board.
     public void placeInitialCheckers() {
         // Place the human player's pieces
@@ -107,12 +107,13 @@ public class Board extends JPanel {
 
                 // If it's the human player's turn
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
+                    int[] pos = t.getPosition();
                     // If there are hint tiles on the board, reset them.
                     if (!board.game.getHintTiles().isEmpty()) {
                         ArrayList<Tile> hintTiles = board.game.getHintTiles();
                         for (Tile t : hintTiles) {
-                            int[] pos = t.getPosition();
-                            board.setHintTileInGrid(pos, false);
+                            int[] position = t.getPosition();
+                            board.setHintTileInGrid(position, false);
                         }
                         board.game.getHintTiles().clear();
                     }
@@ -124,7 +125,7 @@ public class Board extends JPanel {
                     // If any human piece has been moved
                     if (board.game.getMoved()) {
 
-                        // For multi-leg captures,
+                        // For multi-leg captures
                         // if it has captured any opponent piece and it's not a king,
                         if (board.game.getCaptured() && !board.game.getKingCaptured()) {
                             // calculate candidates again from the moved position and see if any possible
@@ -132,11 +133,22 @@ public class Board extends JPanel {
                             HashMap<Tile, Tile> cands = board.getGame().calculateCandidates(board.getGrid(), t);
                             // If there is a forced capture candidate, update the board to show them.
                             if (board.game.getForced()) {
+                                for (Tile t : board.game.getForcedCandidates()) {
+                                    t.setIsForcedCandidate(false);
+                                }
+                                board.game.getForcedCandidates().clear();
+                                board.game.addForcedCandidates(t);
+                                t.setIsForcedCandidate(true);
                                 board.game.setCurrentTile(t);
                                 board.game.setCandidates(cands);
                                 board.repaint();
-                                // If there is not, switch the current and the opponent player.
+                                // If there is not, reset the forced candidate variable and switch the current
+                                // and the opponent player.
                             } else {
+                                for (Tile t : board.game.getForcedCandidates()) {
+                                    t.setIsForcedCandidate(false);
+                                }
+                                board.game.getForcedCandidates().clear();
                                 board.getGame().setCurrentPlayer(board.getGame().getComputer());
                                 board.getGame().setOpponentPlayer(board.getGame().getHuman());
                             }
@@ -161,6 +173,26 @@ public class Board extends JPanel {
                 }
             }
         });
+    }
+
+    // Checks if there should be a forced capture.
+    public void forcedCapturingAvailable() {
+        ArrayList<Tile> forcedCandidates = new ArrayList<>();
+        // For every piece of the current player on the board
+        for (Piece p : this.game.getCurrentPlayer().getPieces()) {
+            // Create a temp object to calculate all the candidates
+            Temp temp = new Temp(this.grid);
+            int[] pos = p.getPosition();
+            Tile tile = temp.tempGrid[pos[0]][pos[1]];
+            temp.calculateCandidates(tile);
+            // If there is an available forced capture, add it to the forced candidate
+            // variable.
+            if (temp.forced) {
+                forcedCandidates.add(tile);
+                this.game.setForcedCandidates(forcedCandidates);
+                tile.setIsForcedCandidate(true);
+            }
+        }
     }
 
     // Shows the rules when clicked
@@ -224,7 +256,7 @@ public class Board extends JPanel {
             // // Check if the moving piece has reached the king's row and decide whether to
             // // make it a king or not.
             // if (moveTo[0] == 0 || moveTo[0] == 7) {
-            //     movingPiece.setIsKing(true);
+            // movingPiece.setIsKing(true);
             // }
 
             // If any piece should be taken due to the move
@@ -233,7 +265,7 @@ public class Board extends JPanel {
                 for (Piece p : temp.firstTakenPieces) {
                     // // Check the validity for regicide
                     // if (p.getIsKing()) {
-                    //     movingPiece.setIsKing(true);
+                    // movingPiece.setIsKing(true);
                     // }
                     // Remove the piece from the human player's pieces list and the grid.
                     this.game.getHuman().removeAPiece(p.getID());
@@ -252,6 +284,7 @@ public class Board extends JPanel {
             // Switch the current player
             this.game.setCurrentPlayer(this.game.getHuman());
             this.game.setOpponentPlayer(this.game.getComputer());
+            this.forcedCapturingAvailable();
 
             // If the method gets called when it's not the computer's turn, show an error
             // message.
@@ -268,15 +301,42 @@ public class Board extends JPanel {
 
         // Check if there is a checker on the clicked tile.
         if (t.getIsOccupied() == true) {
-            // Enable tiles on which only the pieces of the current player are put.
+            // Enable tiles where the pieces of the current player are only.
             if (t.getOccupiedBy().getIsWhite()) {
+                // If there are hint tiles, reset them.
+                if (!board.getGame().getHintTiles().isEmpty()) {
+                    for (Tile tile : board.getGame().getHintTiles()) {
+                        tile.setIsHint(false);
+                    }
+                    board.getGame().getHintTiles().clear();
+                }
+                // If there is any forced capture available, only allow the related tiles to get
+                // selected.
+                if (!board.game.getForcedCandidates().isEmpty()) {
+                    if (t.getIsForcedCandidate()) {
+                        if (board.game.getCurrentTile() != null) {
+                            board.game.resetTiles();
+                            board.game.getCurrentTile().setIsCurrent(false);
+                        }
+                        // Set the tile as the current tile.
+                        board.game.setCurrentTile(t);
+                        // Calculate candidates for the current tile.
+                        HashMap<Tile, Tile> candidates = board.getGame().calculateCandidates(board.getGrid(), t);
+                        // Set the candidates in the board.
+                        board.game.setCandidates(candidates);
+                        // When other pieces get selected while a forced capture is possible, show the
+                        // error dialog.
+                    } else {
+                        JOptionPane.showMessageDialog(board,
+                                "Forced Capturing available, go ahead and take the enemy down!");
+                    }
+                }
                 // Make sure the tile is not a candidate -> The click was not for selecting the
                 // destination of the piece but for choosing the piece to move.
-                if (t.getIsCandidate() == false) {
+                else if (t.getIsCandidate() == false) {
                     // Check if there is already a current tile assigned.
                     if (board.game.getCurrentTile() != null) {
-                        board.game.resetCurrentCandidate();
-                        board.game.getCurrentTile().setIsCurrent(false);
+                        board.game.resetTiles();
                     }
                     // Set the tile as the current tile.
                     board.game.setCurrentTile(t);
@@ -328,8 +388,8 @@ public class Board extends JPanel {
             this.getOpponentPiece(p, t);
         }
 
-        // Reset the current and candidate tile instances of
-        this.game.resetCurrentCandidate();
+        // Reset the current, candidate, hint and forced tiles
+        this.game.resetTiles();
 
         if (t.getIsEnd()) {
             p.setIsKing(true);
