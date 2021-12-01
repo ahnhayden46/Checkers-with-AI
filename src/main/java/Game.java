@@ -228,6 +228,8 @@ public class Game {
         // When it should maximise the score.
         if (max_player) {
             // For each piece, calculate possible future states.
+            // Nested loops for faster calculation, doesn't get all the possible moves of
+            // all pieces at once in case alpha-beta pruning can be applied at some point.
             for (Piece p : temp.computerPieces) {
                 temp.movingPiece = temp.computerPieces.get(temp.findPieceIndexByID(p.getID(), temp.computerPieces));
                 temps = getPieceAllMoves(temp, p, temps, depth);

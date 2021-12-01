@@ -211,10 +211,27 @@ public class Board extends JPanel {
         if (this.game.getCurrentPlayer().getIsHuman()) {
             // Calculate hints only when they were not calculated before.
             if (this.game.getHintTiles().isEmpty()) {
+                // Create a new temp to calculate the best move for the human.
+                Temp temp = new Temp();
+                // If there are forced capturing tiles, calculate among them.
+                if (this.game.getForcedCandidates() != null) {
+                    ArrayList<Piece> humanPieces = new ArrayList<>();
+                    Tile[][] newGrid = new Tile[8][8];
+                    for (int i = 0; i < 8; i++) {
+                        for (int j = 0; j < 8; j++) {
+                            newGrid[i][j] = new Tile(this.grid[i][j]);
+                        }
+                    }
+                    for (Tile t : this.game.getForcedCandidates()) {
+                        humanPieces.add(t.getOccupiedBy());
+                    }
+                    temp = new Temp(this.grid, humanPieces, this.game.getHuman().getPieces());
+                } else {
+                    temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
+                } 
                 // Perform the minimax algorithm for the human player by giving the current
                 // computer pieces as human
                 // pieces and vice versa.
-                Temp temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
                 temp = this.game.minimax(temp, 3, true, -10000, 10000);
                 // Retrieve the information of the node (a temp object) that has the highest
                 // heuristic score calculated by the minimax.
@@ -246,7 +263,10 @@ public class Board extends JPanel {
             // Perform minimax and get the result.
             Temp temp = new Temp(this.grid, this.game.getHuman().getPieces(), this.game.getComputer().getPieces());
             // Calculate the best move using the minimax
+            long startTime = System.nanoTime();
             temp = this.game.minimax(temp, 3, true, -10000, 10000);
+            long stopTime = System.nanoTime();
+            System.out.println("Alpha-beta pruning not applied : " + (stopTime - startTime));
             // If the temp object doesn't have the firstPiece variable, it means there's no
             // possible move.
             if (temp.firstPiece != null) {
@@ -288,8 +308,7 @@ public class Board extends JPanel {
 
                 // If the method gets called when it's not the computer's turn, show an error
                 // message.
-            }
-            else {
+            } else {
                 JOptionPane.showMessageDialog(this, "There is no available move for the Computer, you won!");
             }
         } else {
