@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
 
-import javax.swing.JOptionPane;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -12,6 +9,10 @@ import javax.swing.JOptionPane;
  *
  * @author hayden
  */
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.swing.JOptionPane;
 
 // A class containing information for gameplay.
 public class Game {

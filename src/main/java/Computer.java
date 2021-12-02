@@ -17,7 +17,7 @@ public class Computer extends Player {
     }
 
     // The method that allocates pieces to the initial positions and distributes
-    // unique IDs to each of them.
+    // unique IDs to each of them for the computer.
     public void addInitialPieces() {
 
         // For the pieces on the 1st row
