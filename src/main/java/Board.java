@@ -202,9 +202,9 @@ public class Board extends JPanel {
     public void showRules() {
         JOptionPane.showMessageDialog(this,
                 "Each checker can make a diagonal move forward from one square to an adjacent sqaure. "
-                + "\nWhen it reaches at the end of the row, it becomes a king and can move backward too. "
-                + "\nCapturing moves occur when a player jumps an opposing piece and the square behind is unoccupied by another piece. "
-                + "\nWhen the requirement is met, the capturing must be made and several jumps can be made in one turn.");
+                        + "\nWhen it reaches at the end of the row, it becomes a king and can move backward too. "
+                        + "\nCapturing moves occur when a player jumps an opposing piece and the square behind is unoccupied by another piece. "
+                        + "\nWhen the requirement is met, the capturing must be made and several jumps can be made in one turn.");
     }
 
     // A method that uses the minimax algorithm for the human player and shows
@@ -230,7 +230,7 @@ public class Board extends JPanel {
                     temp = new Temp(this.grid, humanPieces, this.game.getHuman().getPieces());
                 } else {
                     temp = new Temp(this.grid, this.game.getComputer().getPieces(), this.game.getHuman().getPieces());
-                } 
+                }
                 // Perform the minimax algorithm for the human player by giving the current
                 // computer pieces as human
                 // pieces and vice versa.
@@ -268,7 +268,7 @@ public class Board extends JPanel {
             long startTime = System.nanoTime();
             temp = this.game.minimax(temp, 3, true, -10000, 10000);
             long stopTime = System.nanoTime();
-            System.out.println("Alpha-beta pruning not applied : " + (stopTime - startTime));
+            System.out.println("Alpha-beta pruning applied : " + (stopTime - startTime));
             // If the temp object doesn't have the firstPiece variable, it means there's no
             // possible move.
             if (temp.firstPiece != null) {
