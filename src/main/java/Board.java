@@ -107,7 +107,6 @@ public class Board extends JPanel {
 
                 // If it's the human player's turn
                 if (board.getGame().getCurrentPlayer().getIsHuman()) {
-                    int[] pos = t.getPosition();
                     // If there are hint tiles on the board, reset them.
                     if (!board.game.getHintTiles().isEmpty()) {
                         ArrayList<Tile> hintTiles = board.game.getHintTiles();
@@ -202,7 +201,10 @@ public class Board extends JPanel {
     // Shows the rules when clicked
     public void showRules() {
         JOptionPane.showMessageDialog(this,
-                "Each checker can make a diagonal move forward from one square to an adjacent sqaure. \nWhen it reaches at the end of the row, it becomes a king and can move backward too. \nCapturing moves occur when a player jumps an opposing piece and the square behind is unoccupied by another piece. \nWhen the requirement is met, the capturing must be made and several jumps can be made in one turn.");
+                "Each checker can make a diagonal move forward from one square to an adjacent sqaure. "
+                + "\nWhen it reaches at the end of the row, it becomes a king and can move backward too. "
+                + "\nCapturing moves occur when a player jumps an opposing piece and the square behind is unoccupied by another piece. "
+                + "\nWhen the requirement is met, the capturing must be made and several jumps can be made in one turn.");
     }
 
     // A method that uses the minimax algorithm for the human player and shows
@@ -412,6 +414,7 @@ public class Board extends JPanel {
         // Reset the current, candidate, hint and forced tiles
         this.game.resetTiles();
 
+        // If the reached tile is the end (king's row), set the piece a king.
         if (t.getIsEnd()) {
             p.setIsKing(true);
         }
@@ -447,12 +450,13 @@ public class Board extends JPanel {
                 JFrame window = new JFrame();
                 int tileSize = board.tileSize;
                 window.setLayout(new FlowLayout(FlowLayout.CENTER, tileSize / 5, tileSize / 4));
-                // UI elements
+                // UI elements (buttons)
                 JPanel ui = new JPanel();
                 JButton enableHints = new JButton("HINTS");
                 JButton proceed = new JButton("PROCEED");
                 JButton rules = new JButton("RULES");
                 enableHints.setBounds(tileSize, tileSize, tileSize, tileSize);
+                // Set what the buttons do when clicked
                 enableHints.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         board.enableHints();
@@ -468,6 +472,7 @@ public class Board extends JPanel {
                         board.showRules();
                     }
                 });
+                // Clarify what the 'PROCEED' does
                 JLabel text = new JLabel("Click 'PROCEED' after making your moves.");
                 text.setFont(new Font("Verdana", Font.BOLD, tileSize / 4));
                 ui.setLayout(new GridBagLayout());
@@ -483,11 +488,12 @@ public class Board extends JPanel {
                 c.gridy = 2;
                 ui.add(rules, c);
 
-                // Add them all and show
+                // Add them all to the JFrame and show
                 window.setSize(tileSize * 11, tileSize * 10);
                 window.add(board);
                 window.add(ui);
                 window.add(text);
+                // Exits when the window gets closed
                 window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 window.setVisible(true);
             }
@@ -532,8 +538,3 @@ public class Board extends JPanel {
     }
 
 }
-
-// i agree that u did quite a work for the last bit but before most of the time
-// u weren't rly there for the seminar meetings due to ur visa problem or
-// whatever that was,
-//

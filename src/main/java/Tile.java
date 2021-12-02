@@ -64,6 +64,7 @@ public class Tile extends JPanel {
         // Painted light gray or black depending on its 'isLight' value.
         this.setBackground(this.isLight ? Color.LIGHT_GRAY : Color.BLACK);
 
+        // If it is a forced capturing tile, paint it yellow.
         if (this.isForcedCandidate) {
             this.setBackground(Color.YELLOW);
         }
